@@ -407,3 +407,4 @@ window.addEventListener('beforeunload', () => {
     stopObjectDetection();
   }
 });
+
