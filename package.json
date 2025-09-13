@@ -1,0 +1,27 @@
+{
+  "name": "robo-dawg",
+  "version": "1.0.0",
+  "description": "KIBO",
+  "main": "index.js",
+  "scripts": {
+    "dev": "npx serve .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SathvikHaridasu/robo-dawg.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/SathvikHaridasu/robo-dawg/issues"
+  },
+  "homepage": "https://github.com/SathvikHaridasu/robo-dawg#readme",
+  "dependencies": {
+    "axios": "^1.12.1"
+  },
+  "devDependencies": {
+    "serve": "^14.2.5"
+  }
+}
