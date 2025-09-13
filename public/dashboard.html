@@ -281,6 +281,69 @@
                         </div>
                     </section>
 
+                    <!-- Obstacle Avoidance Panel -->
+                    <section class="card obstacle-avoidance-panel">
+                        <div class="obstacle-header">
+                            <h2><i class="fas fa-shield-alt"></i> Obstacle Avoidance</h2>
+                            <div class="obstacle-toggle-row">
+                                <div id="ultrasonicStatus" class="status-chip">📡 Ultrasonic: --</div>
+                                <div id="avoidanceMode" class="status-chip">🤖 Manual</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Distance Display -->
+                        <div class="distance-display">
+                            <div class="distance-meter">
+                                <div class="distance-value">
+                                    <span id="currentDistance">--</span>
+                                    <span class="unit">cm</span>
+                                </div>
+                                <div class="distance-bar">
+                                    <div id="distanceBar" class="bar-fill"></div>
+                                </div>
+                            </div>
+                            <div id="obstacleWarning" class="obstacle-warning hidden">⚠️ OBSTACLE DETECTED</div>
+                        </div>
+
+                        <!-- Control Buttons -->
+                        <div class="obstacle-controls">
+                            <button id="toggleAutoAvoid" class="btn btn-sm obstacle-btn auto-avoid-off">
+                                <i class="fas fa-shield-alt"></i>
+                                <span>Auto-Avoid OFF</span>
+                            </button>
+                            <button id="scanPathBtn" class="btn btn-sm obstacle-btn scan-btn">
+                                <i class="fas fa-radar-chart"></i>
+                                <span>Scan Path</span>
+                            </button>
+                            <button id="checkObstaclesBtn" class="btn btn-sm obstacle-btn check-btn">
+                                <i class="fas fa-eye"></i>
+                                <span>Check Now</span>
+                            </button>
+                        </div>
+
+                        <!-- Scan Results (initially hidden) -->
+                        <div id="scanResults" class="scan-results hidden">
+                            <h4>🔍 Path Scan Results:</h4>
+                            <div class="scan-directions">
+                                <div class="scan-direction">
+                                    <span class="direction-label">⬅️ Left</span>
+                                    <span id="scanLeft" class="direction-value">--</span>
+                                </div>
+                                <div class="scan-direction">
+                                    <span class="direction-label">⬆️ Center</span>
+                                    <span id="scanCenter" class="direction-value">--</span>
+                                </div>
+                                <div class="scan-direction">
+                                    <span class="direction-label">➡️ Right</span>
+                                    <span id="scanRight" class="direction-value">--</span>
+                                </div>
+                            </div>
+                            <div id="bestDirection" class="best-direction">
+                                🎯 Best Path: <span id="recommendedDirection">--</span>
+                            </div>
+                        </div>
+                    </section>
+
                     <!-- Telemetry Chart -->
                     <section class="card">
                         <h2><i class="fas fa-chart-line"></i> Telemetry</h2>

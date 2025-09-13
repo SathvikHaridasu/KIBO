@@ -393,6 +393,31 @@ document.addEventListener('DOMContentLoaded', async () => {
       console.error("loadConfig function not found - check map.js");
     }
 
+    // ✅ NEW: Initialize obstacle avoidance integration
+    console.log("🛡️ Setting up obstacle avoidance integration...");
+    
+    // Listen for obstacle avoidance events
+    document.addEventListener('obstacle:detected', (event) => {
+      const { distance, action } = event.detail;
+      console.log(`🚨 Obstacle event: ${action} at ${distance}cm`);
+      
+      if (typeof addToSummary === 'function') {
+        addToSummary(`🚨 Obstacle detected: ${action} at ${distance}cm`);
+      }
+    });
+    
+    // Listen for path scan results
+    document.addEventListener('path:scanned', (event) => {
+      const { bestDirection, bestDistance } = event.detail;
+      console.log(`🎯 Path scan result: ${bestDirection} (${bestDistance}cm)`);
+      
+      if (typeof addToSummary === 'function') {
+        addToSummary(`🎯 Best path: ${bestDirection} - ${bestDistance}cm clear`);
+      }
+    });
+    
+    console.log("✅ Obstacle avoidance integration ready");
+
     console.log("✅ Initial setup complete");
   } catch (error) {
     console.error("❌ Initialization error:", error);
