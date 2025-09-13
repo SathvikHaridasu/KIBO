@@ -24,6 +24,43 @@ google-credentials.json
 service-account-key.json
 api-keys.txt
 
+# ===== LOGS =====
+logs/
+*.log
+combined.log
+error.log
+access.log
+
+# ===== TEMP & CACHE =====
+.cache/
+temp/
+tmp/
+.tmp/
+uploads/
+audio-temp/
+*.tmp
+*.temp
+
+# ===== IDE & EDITOR =====
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ===== BUILD & DIST =====
+build/
+dist/
+.next/
+out/
+
+# ===== TESTING =====
+coverage/
+.nyc_output/
+test-results/
+
 # ===== PYTHON (if using any) =====
 __pycache__/
 *.py[cod]
@@ -31,3 +68,24 @@ __pycache__/
 .Python
 venv/
 env/
+
+# ===== PROJECT SPECIFIC =====
+# Audio recordings
+recordings/
+*.wav
+*.mp3
+*.m4a
+*.webm
+
+# Robot logs
+robot-logs/
+movement-data/
+
+# Map cache
+map-cache/
+
+# ===== BACKUP FILES =====
+*.backup
+*.bak
+*.orig
+backup/
