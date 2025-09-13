@@ -6,7 +6,7 @@ let cameraRetryInterval = null;
 
 // ===== CAMERA CONFIGURATION =====
 const CAMERA_CONFIG = {
-  PI_IP: "10.0.0.22",
+  PI_IP: "10.37.117.213",
   CAMERA_PORT: 5004,
   RETRY_DELAY: 3000,
   CONNECTION_TIMEOUT: 5000
