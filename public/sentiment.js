@@ -218,16 +218,25 @@ class SentimentAnalyzer {
         const authButton = document.getElementById('genesys-auth-btn');
         const authStatus = document.getElementById('genesys-auth-status');
         const authButtonMini = document.getElementById('genesys-auth-btn-mini');
+        const authStatusMini = document.getElementById('genesys-status-mini');
         
         if (authButton && authStatus) {
             if (authenticated) {
-                authButton.innerHTML = '<i class="fas fa-check-circle"></i> Authenticated';
-                authButton.className = 'btn btn-success';
+                authButton.innerHTML = `
+                    <i class="fas fa-check-circle"></i>
+                    <span class="btn-text">Connected to Genesys Cloud</span>
+                    <span class="btn-subtitle">Real-time analysis active</span>
+                `;
+                authButton.className = 'btn btn-success genesys-connect-btn';
                 authStatus.textContent = 'Connected to Genesys Cloud';
                 authStatus.className = 'status-connected';
             } else {
-                authButton.innerHTML = '<i class="fas fa-sign-in-alt"></i> Connect to Genesys';
-                authButton.className = 'btn btn-primary';
+                authButton.innerHTML = `
+                    <i class="fas fa-cloud"></i>
+                    <span class="btn-text">Connect to Genesys Cloud</span>
+                    <span class="btn-subtitle">Enable real-time sentiment analysis</span>
+                `;
+                authButton.className = 'btn btn-primary genesys-connect-btn';
                 authStatus.textContent = 'Not connected';
                 authStatus.className = 'status-disconnected';
             }
@@ -236,11 +245,22 @@ class SentimentAnalyzer {
         // Update mini widget
         if (authButtonMini) {
             if (authenticated) {
-                authButtonMini.innerHTML = '<i class="fas fa-check-circle"></i> Connected';
-                authButtonMini.className = 'btn btn-sm btn-success';
+                authButtonMini.innerHTML = '<i class="fas fa-check-circle"></i><span>Connected</span>';
+                authButtonMini.className = 'btn btn-sm btn-success genesys-mini-btn';
             } else {
-                authButtonMini.innerHTML = '<i class="fas fa-sign-in-alt"></i> Connect';
-                authButtonMini.className = 'btn btn-sm btn-primary';
+                authButtonMini.innerHTML = '<i class="fas fa-cloud"></i><span>Connect</span>';
+                authButtonMini.className = 'btn btn-sm btn-primary genesys-mini-btn';
+            }
+        }
+        
+        // Update mini status text
+        if (authStatusMini) {
+            if (authenticated) {
+                authStatusMini.textContent = 'Connected to Genesys Cloud';
+                authStatusMini.className = 'status-connected';
+            } else {
+                authStatusMini.textContent = 'Not connected';
+                authStatusMini.className = 'status-disconnected';
             }
         }
     }

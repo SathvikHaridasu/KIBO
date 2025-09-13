@@ -159,7 +159,7 @@
                 <!-- LEFT PANEL: Detection Summary + Metrics -->
                 <aside class="left-panel">
                     <section class="card detection-summary">
-                        <h2>🚧 Detection Summary</h2>
+                        <h2>Detection Summary</h2>
                         <ul>
                             <li>Obstacles: <span id="obstacle-count">2</span></li>
                             <li>Crosswalks: <span id="crosswalk-status">Clear ✅</span></li>
@@ -286,16 +286,26 @@
                     <section class="card sentiment-panel">
                         <div class="panel-header">
                             <h2><i class="fas fa-brain"></i> Sentiment Analysis</h2>
-                            <button class="btn btn-sm btn-primary" id="genesys-auth-btn">
-                                <i class="fas fa-sign-in-alt"></i> Connect to Genesys
-                            </button>
+                        </div>
+                        
+                        <!-- Genesys Connection Section -->
+                        <div class="genesys-connection-section">
+                            <div class="connection-status">
+                                <div class="status-item">
+                                    <span class="status-label">Genesys Cloud:</span>
+                                    <span class="status-value" id="genesys-auth-status">Not connected</span>
+                                </div>
+                            </div>
+                            <div class="genesys-auth-container">
+                                <button class="btn btn-primary genesys-connect-btn" id="genesys-auth-btn">
+                                    <i class="fas fa-cloud"></i>
+                                    <span class="btn-text">Connect to Genesys Cloud</span>
+                                    <span class="btn-subtitle">Enable real-time sentiment analysis</span>
+                                </button>
+                            </div>
                         </div>
                         
                         <div class="sentiment-status">
-                            <div class="status-item">
-                                <span class="status-label">Connection:</span>
-                                <span class="status-value" id="genesys-auth-status">Not connected</span>
-                            </div>
                             <div class="status-item">
                                 <span class="status-label">Current Sentiment:</span>
                                 <span class="status-value">

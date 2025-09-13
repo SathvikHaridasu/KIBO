@@ -127,16 +127,25 @@
         </div>
         
         <!-- Sentiment Analysis Display -->
-        <div class="sentiment-widget" style="padding: 8px; background: #f8f9fa; border-radius: 3px; margin: 5px 0; border: 1px solid #dee2e6;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-            <span style="font-size: 0.8em; color: #666; font-weight: 500;">Sentiment Analysis</span>
-            <button id="genesys-auth-btn-mini" class="btn btn-sm" style="padding: 2px 6px; font-size: 0.7em;">
-              <i class="fas fa-sign-in-alt"></i> Connect
+        <div class="sentiment-widget">
+          <div class="sentiment-header">
+            <div class="sentiment-title">
+              <i class="fas fa-brain"></i>
+              <span>Sentiment Analysis</span>
+            </div>
+            <button id="genesys-auth-btn-mini" class="btn btn-sm btn-primary genesys-mini-btn">
+              <i class="fas fa-cloud"></i>
+              <span>Connect</span>
             </button>
           </div>
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <span id="sentiment-display-mini" class="sentiment-neutral" style="padding: 2px 6px; border-radius: 3px; font-size: 0.75em; font-weight: 600;">Neutral</span>
-            <span id="sentiment-indicator-mini" class="sentiment-indicator neutral" style="width: 8px; height: 8px; border-radius: 50%;"></span>
+          <div class="sentiment-content">
+            <div class="sentiment-display-row">
+              <span id="sentiment-display-mini" class="sentiment-neutral">Neutral</span>
+              <span id="sentiment-indicator-mini" class="sentiment-indicator neutral"></span>
+            </div>
+            <div class="sentiment-status-text">
+              <span id="genesys-status-mini" class="status-disconnected">Not connected</span>
+            </div>
           </div>
         </div>
         

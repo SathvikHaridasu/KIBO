@@ -15,7 +15,76 @@
 .panel-header h2 {
     margin: 0;
     font-size: 1.1rem;
-    color: #333;
+    color: #ffffff;
+}
+
+/* Genesys Connection Section */
+.genesys-connection-section {
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+    border: 2px solid #2196f3;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 4.5rem;
+    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.15);
+}
+
+.connection-status {
+    margin-bottom: 0.75rem;
+}
+
+.genesys-auth-container {
+    display: flex;
+    justify-content: center;
+}
+
+.genesys-connect-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 4.5rem 2rem;
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    border: none;
+    border-radius: 12px;
+    color: white;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 16px rgba(0, 123, 255, 0.3);
+    min-width: 280px;
+    width: 100%;
+    max-width: 350px;
+}
+
+.genesys-connect-btn:hover {
+    background: linear-gradient(135deg, #0056b3 0%, #004085 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.4);
+}
+
+.genesys-connect-btn i {
+    font-size: 1.8rem;
+    margin-bottom: 0.5rem;
+}
+
+.genesys-connect-btn .btn-text {
+    font-size: 1.1rem;
+    margin-bottom: 0.25rem;
+    font-weight: 700;
+}
+
+.genesys-connect-btn .btn-subtitle {
+    font-size: 0.85rem;
+    opacity: 0.95;
+    font-weight: 500;
+}
+
+.genesys-connect-btn.btn-success {
+    background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+    box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+}
+
+.genesys-connect-btn.btn-success:hover {
+    background: linear-gradient(135deg, #1e7e34 0%, #155724 100%);
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
 }
 
 .sentiment-status {
@@ -440,6 +509,97 @@
     }
 }
 
+/* Main Interface Sentiment Widget */
+.sentiment-widget {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 0.75rem;
+    margin: 0.5rem 0;
+    transition: all 0.3s ease;
+}
+
+.sentiment-widget:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transform: translateY(-1px);
+}
+
+.sentiment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.sentiment-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    color: #666;
+    font-weight: 500;
+}
+
+.sentiment-title i {
+    color: #007bff;
+    font-size: 0.9rem;
+}
+
+.genesys-mini-btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.7rem;
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    border: none;
+    border-radius: 4px;
+    color: white;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.genesys-mini-btn:hover {
+    background: linear-gradient(135deg, #0056b3 0%, #004085 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0, 123, 255, 0.3);
+}
+
+.genesys-mini-btn.btn-success {
+    background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+}
+
+.genesys-mini-btn.btn-success:hover {
+    background: linear-gradient(135deg, #1e7e34 0%, #155724 100%);
+}
+
+.sentiment-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.sentiment-display-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.sentiment-status-text {
+    font-size: 0.7rem;
+    color: #666;
+}
+
+.sentiment-status-text .status-connected {
+    color: #28a745;
+    font-weight: 500;
+}
+
+.sentiment-status-text .status-disconnected {
+    color: #dc3545;
+    font-weight: 500;
+}
+
 /* Dark Mode Support */
 @media (prefers-color-scheme: dark) {
     .sentiment-panel {
@@ -468,5 +628,21 @@
         background: #2d3748;
         border-color: #4a5568;
         color: #e2e8f0;
+    }
+    
+    .sentiment-widget {
+        background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+        border-color: #718096;
+        color: #e2e8f0;
+    }
+    
+    .sentiment-title {
+        color: #e2e8f0;
+    }
+    
+    .genesys-connection-section {
+        background: linear-gradient(135deg, #2b6cb0 0%, #2c5282 100%);
+        border-color: #3182ce;
+        box-shadow: 0 4px 12px rgba(49, 130, 206, 0.2);
     }
 }
