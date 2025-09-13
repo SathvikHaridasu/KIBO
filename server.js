@@ -5,17 +5,140 @@ import axios from "axios";
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from 'url';
+import qs from 'qs';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+// OAuth Configuration
+const CLIENT_ID = "376e2b50-76c3-45d8-804e-3815c8d1b2d9";
+const CLIENT_SECRET = "pYz2-gLgeIVjkPLrA_GgMB7y1LxF-SyOvRo77F9hgPw";
+const REDIRECT_URI = "http://localhost:3000/auth/callback";
+
+// Function to exchange authorization code for tokens
+async function exchangeCodeForToken(code) {
+    const tokenUrl = "https://login.cac1.pure.cloud/oauth/token";
+    
+    // Prepare the POST data
+    const data = qs.stringify({
+        grant_type: "authorization_code",
+        code: code,
+        redirect_uri: REDIRECT_URI
+    });
+
+    // Encode client credentials for Basic Auth header
+    const auth = Buffer.from(`${CLIENT_ID}:${CLIENT_SECRET}`).toString("base64");
+
+    try {
+        // Make POST request to get tokens
+        const response = await axios.post(tokenUrl, data, {
+            headers: {
+                'Authorization': `Basic ${auth}`,
+                'Content-Type': 'application/x-www-form-urlencoded'
+            }
+        });
+        
+        return response.data; // { access_token, refresh_token, expires_in, ... }
+    } catch (error) {
+        console.error('Token exchange error:', error.response?.data || error.message);
+        throw error;
+    }
+}
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 const VAPI_API_KEY = process.env.VAPI_API_KEY;
+
+// Genesys Cloud API Configuration
+const GENESYS_API_BASE = "https://api.mypurecloud.com";
+
+// Function to analyze sentiment and topics using Genesys Cloud
+async function analyzeInteraction(accessToken, transcript) {
+    try {
+        // Create a new interaction for analysis
+        const interactionResponse = await axios.post(`${GENESYS_API_BASE}/api/v2/analytics/conversations/details`, {
+            interval: "0/24h",
+            order: "asc",
+            orderBy: "conversationStart",
+            segmentFilters: [
+                {
+                    type: "or",
+                    predicates: [
+                        {
+                            type: "dimension",
+                            dimension: "purpose",
+                            operator: "matches",
+                            value: "robot_interaction"
+                        }
+                    ]
+                }
+            ]
+        }, {
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        // Add transcript to the interaction
+        await axios.post(`${GENESYS_API_BASE}/api/v2/conversations/${interactionResponse.data.conversations[0].conversationId}/transcripts`, {
+            transcripts: [{
+                utterance: transcript,
+                speakerId: "user"
+            }]
+        }, {
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        // Get sentiment and topic analysis
+        const analysisResponse = await axios.get(
+            `${GENESYS_API_BASE}/api/v2/analytics/conversations/${interactionResponse.data.conversations[0].conversationId}/details`, {
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        return {
+            sentiment: analysisResponse.data.sentiment,
+            topics: analysisResponse.data.topics,
+            interactionId: interactionResponse.data.conversations[0].conversationId
+        };
+    } catch (error) {
+        console.error('Genesys analysis error:', error.response?.data || error.message);
+        throw error;
+    }
+}
+
+// Function to handle user frustration
+function handleNegativeSentiment(sentiment, topics) {
+    const responses = {
+        'very_negative': {
+            priority: 'high',
+            message: "I notice you seem frustrated. Would you like me to connect you with additional assistance?",
+            actions: ['offer_help', 'pause_interaction', 'escalate']
+        },
+        'negative': {
+            priority: 'medium',
+            message: "I want to make sure I'm helping effectively. Would you like me to explain things differently?",
+            actions: ['clarify', 'offer_alternatives']
+        },
+        'neutral': {
+            priority: 'low',
+            message: null,
+            actions: []
+        }
+    };
+
+    return responses[sentiment] || responses.neutral;
+}
 
 app.use(cors());
 app.use(express.json({ 
@@ -26,6 +149,32 @@ app.use(express.urlencoded({
   limit: '50mb' 
 }));
 app.use(express.static(path.join(__dirname, 'public')));
+
+// OAuth callback route
+app.get('/auth/callback', async (req, res) => {
+    const { code } = req.query;
+    
+    if (!code) {
+        return res.status(400).json({ error: 'Authorization code is required' });
+    }
+
+    try {
+        const tokenData = await exchangeCodeForToken(code);
+        // You might want to store the tokens securely or send them to the client
+        res.json({ 
+            message: 'Authorization successful',
+            // Only send necessary token info to client
+            expires_in: tokenData.expires_in,
+            token_type: tokenData.token_type
+        });
+    } catch (error) {
+        console.error('Auth callback error:', error);
+        res.status(500).json({ 
+            error: 'Failed to exchange code for token',
+            details: error.message
+        });
+    }
+});
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));

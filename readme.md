@@ -11,7 +11,7 @@ Kibo is a voice-first, Gemini-powered mapping and robot control dashboard. It co
   - Real-time voice transcription and assistant responses.
 - **Gemini AI Integration:**
   - Leverages Gemini for intelligent command parsing and contextual assistance.
-- **Live Camera & Object Detection:**
+- **Live Camera & Object Detection:** 3
   - View live camera feed and run on-device object detection (COCO-SSD, TensorFlow.js).
 - **Interactive Map:**
   - Set origin, destination, and waypoints.
