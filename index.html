@@ -4,75 +4,13 @@
   <meta charset="UTF-8">
   <title>Simple Google Maps UI Clone</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body, html {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      font-family: Arial, sans-serif;
-    }
-    .top-bar {
-      background: #fff;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      padding: 10px 20px;
-      display: flex;
-      align-items: center;
-      position: absolute;
-      width: 100%;
-      z-index: 2;
-    }
-    .logo {
-      font-weight: bold;
-      color: #4285F4;
-      font-size: 1.2em;
-      margin-right: 20px;
-    }
-    .search-box {
-      flex: 1;
-      display: flex;
-      align-items: center;
-    }
-    .search-box input {
-      width: 100%;
-      padding: 8px 12px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      font-size: 1em;
-    }
-    .map-container {
-      position: absolute;
-      top: 50px;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: #e5e3df;
-      z-index: 1;
-    }
-    .side-panel {
-      position: absolute;
-      top: 50px;
-      left: 0;
-      width: 300px;
-      bottom: 0;
-      background: rgba(255,255,255,0.95);
-      box-shadow: 2px 0 8px rgba(0,0,0,0.1);
-      z-index: 3;
-      padding: 20px;
-      display: none;
-    }
-    .menu-btn {
-      background: none;
-      border: none;
-      font-size: 1.5em;
-      margin-right: 15px;
-      cursor: pointer;
-    }
-    @media (max-width: 600px) {
-      .side-panel {
-        width: 80vw;
-      }
-    }
-  </style>
+  <link rel="stylesheet" href="dashboard.css">
+  <script src="app.js"></script>
+  <script src="map.js"></script>
+  <script src="navigation.js"></script>
+  <script src="camera.js"></script>
+  <script src="detection_client.js"></script>
+  <script src="gemini.js"></script>
 </head>
 <body>
   <div class="top-bar">
@@ -97,6 +35,8 @@
       <rect width="100%" height="100%" fill="#cfd8dc"/>
       <text x="50%" y="50%" text-anchor="middle" fill="#888" font-size="32" dy=".3em">Map Area</text>
     </svg>
+    <div id="summary" style="position:absolute;bottom:10px;left:10px;width:300px;height:100px;background:#fff8;overflow:auto;padding:8px;border-radius:8px;"></div>
+    <div id="assistantOutput" style="position:absolute;bottom:120px;left:10px;width:300px;background:#fff8;padding:8px;border-radius:8px;"></div>
   </div>
   <script>
     function togglePanel() {
