@@ -150,6 +150,45 @@ app.use(express.urlencoded({
 }));
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Store tokens in memory (for development - use proper storage in production)
+let genesysTokens = null;
+
+// OAuth callback route handler
+app.get('/auth/callback', async (req, res) => {
+  const code = req.query.code;
+  
+  if (!code) {
+    console.error('No authorization code received');
+    return res.status(400).send('Authorization code missing');
+  }
+
+  try {
+    const tokens = await exchangeCodeForToken(code);
+    
+    // Store tokens (use secure storage in production)
+    genesysTokens = {
+      ...tokens,
+      expires_at: Date.now() + (tokens.expires_in * 1000)
+    };
+    
+    console.log('Successfully obtained Genesys access token');
+    
+    // Redirect to dashboard or send success response
+    res.redirect('/dashboard.html?auth=success');
+  } catch (error) {
+    console.error('Error exchanging authorization code:', error);
+    res.status(500).send('Error exchanging authorization code.');
+  }
+});
+
+// Helper route to check auth status
+app.get('/auth/status', (req, res) => {
+  res.json({
+    authenticated: !!genesysTokens,
+    expires_at: genesysTokens?.expires_at
+  });
+});
+
 // OAuth callback route
 app.get('/auth/callback', async (req, res) => {
     const { code } = req.query;
