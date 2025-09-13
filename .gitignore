@@ -1,0 +1,33 @@
+# ===== NODE.JS =====
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# ===== ENVIRONMENT & CONFIG =====
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+config.json
+secrets.json
+credentials.json
+
+# ===== API KEYS & CREDENTIALS =====
+*.pem
+*.key
+*.crt
+google-credentials.json
+service-account-key.json
+api-keys.txt
+
+# ===== PYTHON (if using any) =====
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+venv/
+env/
