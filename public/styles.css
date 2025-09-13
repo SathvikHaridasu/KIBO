@@ -1259,13 +1259,48 @@ input[type='text']:focus {
 }
 
 /* Left-edge hotspot to reveal sidebar */
+/* Left-edge hotspot to reveal sidebar */
 #leftEdgeHotspot {
   position: fixed;
   top: 0;
   left: 0;
-  width: 10px; /* edge width to trigger */
+  width: 20px;
   height: 100vh;
-  z-index: 1100; /* above map, below sidebar header z if needed */
   background: transparent;
-  cursor: ew-resize;
+  z-index: 49;
+  cursor: pointer;
+}
+
+/* Status Container Styling */
+.status-container {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin: 20px 0;
+}
+
+/* Mobile responsiveness for status container */
+@media (max-width: 768px) {
+  .status-container {
+    margin: 10px 5px;
+  }
+  
+  .enhanced-detection-panel {
+    margin: 5px !important;
+    padding: 15px !important;
+    max-width: none !important;
+  }
+}
+
+/* Integration with existing sidebar/panel styles */
+.enhanced-detection-panel {
+  position: relative;
+  z-index: 10;
+}
+
+/* Ensure panels don't overlap */
+@media (max-width: 1024px) {
+  .enhanced-detection-panel {
+    margin-bottom: 20px;
+  }
 }

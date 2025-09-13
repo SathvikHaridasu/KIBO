@@ -26,10 +26,13 @@ class RoverDashboard {
     }
 
     async init() {
-        console.log('🚀 Starting simple HTTP dashboard...');
+        console.log('🚀 Starting enhanced dashboard with obstacle avoidance...');
         
         // Setup camera streams directly
         this.setupCameraStreams();
+
+        // ✅ NEW: Initialize obstacle avoidance
+        this.initializeObstacleAvoidance();
 
         // Start streams automatically after a short delay
         setTimeout(() => this.startCameraStreams(), 1000);
@@ -42,6 +45,8 @@ class RoverDashboard {
         
         // Initial connection test
         await this.testConnection();
+        
+        console.log('✅ Enhanced dashboard with obstacle avoidance ready!');
     }
 
     setupCameraStreams() {
@@ -338,6 +343,313 @@ class RoverDashboard {
             emergencyBtn.addEventListener('click', () => {
                 this.sendCommand('stop', 0); // Immediate stop
             });
+        }
+    }
+
+    // ===== OBSTACLE AVOIDANCE METHODS =====
+    initializeObstacleAvoidance() {
+        console.log("🛡️ Initializing dashboard obstacle avoidance...");
+        
+        // Initialize obstacle avoidance variables
+        this.autoAvoidEnabled = false;
+        this.currentDistance = 999;
+        this.distanceUpdateInterval = null;
+        this.obstacleAvoidanceActive = false;
+        
+        // Setup event listeners
+        this.setupObstacleControls();
+        
+        // Start distance monitoring
+        this.startDistanceMonitoring();
+        
+        console.log("✅ Dashboard obstacle avoidance initialized");
+    }
+
+    setupObstacleControls() {
+        // Auto-avoid toggle
+        const autoAvoidBtn = document.getElementById('toggleAutoAvoid');
+        if (autoAvoidBtn) {
+            autoAvoidBtn.addEventListener('click', () => this.toggleAutoAvoid());
+        }
+        
+        // Manual scan button
+        const scanBtn = document.getElementById('scanPathBtn');
+        if (scanBtn) {
+            scanBtn.addEventListener('click', () => this.scanForPath());
+        }
+        
+        // Check obstacles button  
+        const checkBtn = document.getElementById('checkObstaclesBtn');
+        if (checkBtn) {
+            checkBtn.addEventListener('click', () => this.checkObstacles());
+        }
+        
+        console.log("🎛️ Obstacle control handlers setup complete");
+    }
+
+    startDistanceMonitoring() {
+        if (this.distanceUpdateInterval) {
+            clearInterval(this.distanceUpdateInterval);
+        }
+        
+        this.distanceUpdateInterval = setInterval(async () => {
+            await this.updateDistance();
+        }, 500); // Update every 500ms
+        
+        console.log("📡 Dashboard distance monitoring started");
+    }
+
+    async updateDistance() {
+        try {
+            const response = await fetch(`http://${this.PI_IP}:5005/ultrasonic_distance`);
+            
+            if (!response.ok) throw new Error('Distance request failed');
+            
+            const data = await response.json();
+            this.currentDistance = data.distance_cm;
+            
+            // Update UI
+            this.updateDistanceDisplay(data.distance_cm);
+            
+            // Check for obstacles if auto-avoid is enabled
+            if (this.autoAvoidEnabled && data.obstacle_detected) {
+                await this.handleAutoAvoid();
+            }
+            
+        } catch (error) {
+            console.warn('📡 Distance update failed:', error);
+            this.updateDistanceDisplay(999); // Show offline
+        }
+    }
+
+    updateDistanceDisplay(distance) {
+        // Update distance value
+        const distanceElement = document.getElementById('currentDistance');
+        if (distanceElement) {
+            distanceElement.textContent = distance === 999 ? '--' : distance;
+        }
+        
+        // Update distance bar (0-100cm range)
+        const barElement = document.getElementById('distanceBar');
+        if (barElement) {
+            const percentage = distance === 999 ? 0 : Math.min((distance / 100) * 100, 100);
+            barElement.style.width = percentage + '%';
+        }
+        
+        // Update obstacle warning
+        const warningElement = document.getElementById('obstacleWarning');
+        if (warningElement) {
+            if (distance < 15 && distance !== 999) {
+                warningElement.classList.remove('hidden');
+            } else {
+                warningElement.classList.add('hidden');
+            }
+        }
+        
+        // Update ultrasonic status
+        const ultrasonicStatus = document.getElementById('ultrasonicStatus');
+        if (ultrasonicStatus) {
+            if (distance === 999) {
+                ultrasonicStatus.textContent = '📡 Ultrasonic: Offline';
+                ultrasonicStatus.className = 'status-chip danger';
+            } else if (distance < 15) {
+                ultrasonicStatus.textContent = `📡 Ultrasonic: ${distance}cm DANGER`;
+                ultrasonicStatus.className = 'status-chip danger';
+            } else if (distance < 50) {
+                ultrasonicStatus.textContent = `📡 Ultrasonic: ${distance}cm Warning`;
+                ultrasonicStatus.className = 'status-chip warning';
+            } else {
+                ultrasonicStatus.textContent = `📡 Ultrasonic: ${distance}cm Clear`;
+                ultrasonicStatus.className = 'status-chip active';
+            }
+        }
+        
+        // Update rover status distance
+        const distanceStatus = document.querySelector('.robo-distance');
+        if (distanceStatus) {
+            distanceStatus.textContent = distance === 999 ? '-- cm' : `${distance} cm`;
+        }
+    }
+
+    toggleAutoAvoid() {
+        this.autoAvoidEnabled = !this.autoAvoidEnabled;
+        
+        const button = document.getElementById('toggleAutoAvoid');
+        const modeStatus = document.getElementById('avoidanceMode');
+        
+        if (button) {
+            if (this.autoAvoidEnabled) {
+                button.className = 'btn btn-sm obstacle-btn auto-avoid-on';
+                button.innerHTML = `
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Auto-Avoid ON</span>
+                `;
+            } else {
+                button.className = 'btn btn-sm obstacle-btn auto-avoid-off';
+                button.innerHTML = `
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Auto-Avoid OFF</span>
+                `;
+            }
+        }
+        
+        if (modeStatus) {
+            modeStatus.textContent = this.autoAvoidEnabled ? '🤖 Auto' : '🎮 Manual';
+            modeStatus.className = this.autoAvoidEnabled ? 'status-chip active' : 'status-chip';
+        }
+        
+        this.addLog(`Obstacle avoidance ${this.autoAvoidEnabled ? 'enabled' : 'disabled'}`, 
+                   this.autoAvoidEnabled ? 'success' : 'info');
+        
+        console.log(`🛡️ Auto-avoid ${this.autoAvoidEnabled ? 'ENABLED' : 'DISABLED'}`);
+    }
+
+    async checkObstacles() {
+        try {
+            const response = await fetch(`http://${this.PI_IP}:5005/obstacle_check`);
+            
+            if (!response.ok) throw new Error('Obstacle check failed');
+            
+            const data = await response.json();
+            console.log('🔍 Obstacle check result:', data);
+            
+            // Update status based on result
+            let statusMessage = '';
+            let logType = 'info';
+            
+            switch(data.action) {
+                case 'AVOID_SCAN':
+                    statusMessage = '🚨 OBSTACLES DETECTED - Scan recommended';
+                    logType = 'error';
+                    break;
+                case 'CAMERA_AVOID':
+                    statusMessage = '👁️ Camera detects obstacles ahead';
+                    logType = 'error';
+                    break;
+                case 'CLEAR':
+                    statusMessage = '✅ Path clear - safe to proceed';
+                    logType = 'success';
+                    break;
+                default:
+                    statusMessage = `🔍 Obstacle check: ${data.action}`;
+            }
+            
+            this.addLog(statusMessage, logType);
+            return data;
+            
+        } catch (error) {
+            console.error('Obstacle check error:', error);
+            this.addLog('❌ Obstacle check failed', 'error');
+        }
+    }
+
+    async scanForPath() {
+        try {
+            const button = document.getElementById('scanPathBtn');
+            if (button) {
+                button.innerHTML = `<i class="fas fa-spinner fa-spin"></i><span>Scanning...</span>`;
+                button.disabled = true;
+            }
+            
+            this.addLog('🔄 Scanning for clear path...', 'info');
+            
+            const response = await fetch(`http://${this.PI_IP}:5005/scan_path`, {
+                method: 'POST'
+            });
+            
+            if (!response.ok) throw new Error('Path scan failed');
+            
+            const data = await response.json();
+            console.log('📡 Scan results:', data);
+            
+            // Display scan results
+            this.displayScanResults(data);
+            
+            this.addLog(`📡 Best path: ${data.best_direction} (${data.best_distance}cm)`, 'success');
+            
+            return data;
+            
+        } catch (error) {
+            console.error('Path scan error:', error);
+            this.addLog('❌ Path scan failed', 'error');
+        } finally {
+            const button = document.getElementById('scanPathBtn');
+            if (button) {
+                button.innerHTML = `<i class="fas fa-radar-chart"></i><span>Scan Path</span>`;
+                button.disabled = false;
+            }
+        }
+    }
+
+    displayScanResults(data) {
+        const resultsDiv = document.getElementById('scanResults');
+        if (!resultsDiv) return;
+        
+        // Show results panel
+        resultsDiv.classList.remove('hidden');
+        
+        // Update direction values
+        document.getElementById('scanLeft').textContent = `${data.scan_results.left}cm`;
+        document.getElementById('scanCenter').textContent = `${data.scan_results.center}cm`;
+        document.getElementById('scanRight').textContent = `${data.scan_results.right}cm`;
+        
+        // Update best direction
+        const directionElement = document.getElementById('recommendedDirection');
+        if (directionElement) {
+            directionElement.textContent = data.best_direction.toUpperCase();
+        }
+        
+        // Auto-hide after 10 seconds
+        setTimeout(() => {
+            resultsDiv.classList.add('hidden');
+        }, 10000);
+    }
+
+    async handleAutoAvoid() {
+        if (!this.autoAvoidEnabled || this.obstacleAvoidanceActive) return;
+        
+        this.obstacleAvoidanceActive = true;
+        console.log('🚨 Dashboard auto-avoid triggered!');
+        
+        try {
+            // Check obstacles
+            const obstacleData = await this.checkObstacles();
+            
+            if (obstacleData && obstacleData.action === 'AVOID_SCAN') {
+                console.log('🔄 Auto-scanning for clear path...');
+                
+                // Automatically scan for path
+                const scanData = await this.scanForPath();
+                
+                if (scanData && scanData.best_direction) {
+                    this.addLog(`🤖 Auto-avoid: Go ${scanData.best_direction} (${scanData.best_distance}cm clear)`, 'warning');
+                    console.log(`🎯 Auto-avoid recommends: ${scanData.best_direction}`);
+                }
+            }
+        } finally {
+            // Reset after 5 seconds
+            setTimeout(() => {
+                this.obstacleAvoidanceActive = false;
+            }, 5000);
+        }
+    }
+
+    addLog(message, type = 'info') {
+        const systemLogs = document.getElementById('system-logs');
+        if (!systemLogs) return;
+        
+        const timestamp = new Date().toLocaleTimeString();
+        const logEntry = document.createElement('div');
+        logEntry.className = `log-entry ${type}`;
+        logEntry.textContent = `[${timestamp}] ${message}`;
+        
+        systemLogs.appendChild(logEntry);
+        systemLogs.scrollTop = systemLogs.scrollHeight;
+        
+        // Keep only last 50 log entries
+        const entries = systemLogs.children;
+        if (entries.length > 50) {
+            systemLogs.removeChild(entries[0]);
         }
     }
 }

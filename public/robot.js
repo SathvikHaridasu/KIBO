@@ -199,6 +199,68 @@ window.turnLeft = turnLeft;
 window.turnRight = turnRight;
 window.stopRobot = stopRobot;
 
+// ===== ENHANCED MOVEMENT WITH OBSTACLE AVOIDANCE =====
+async function moveForwardWithObstacleDetection(duration, plannedDistance) {
+  console.log(`🛡️ Enhanced forward movement: ${duration}s, planned ${plannedDistance}m`);
+  
+  // Check initial obstacles
+  if (typeof window.getCurrentDistance === 'function') {
+    const currentDistance = window.getCurrentDistance();
+    
+    if (currentDistance < 15 && currentDistance !== 999) {
+      console.log(`🚨 Initial obstacle detected at ${currentDistance}cm - aborting movement`);
+      
+      if (typeof addToSummary === 'function') {
+        addToSummary(`🛡️ Movement cancelled - obstacle at ${currentDistance}cm`);
+      }
+      
+      return false;
+    }
+  }
+  
+  // Start movement
+  const movementPromise = robotController.sendCommand('forward', duration);
+  
+  // Monitor for obstacles during movement
+  const monitoringPromise = new Promise(async (resolve) => {
+    const startTime = Date.now();
+    const totalTime = duration * 1000;
+    
+    while (Date.now() - startTime < totalTime) {
+      if (typeof window.getCurrentDistance === 'function') {
+        const distance = window.getCurrentDistance();
+        
+        if (distance < 10 && distance !== 999) {
+          console.log(`🚨 Obstacle detected during movement at ${distance}cm - emergency stop`);
+          
+          // Emergency stop
+          await robotController.sendCommand('stop');
+          
+          if (typeof addToSummary === 'function') {
+            addToSummary(`🚨 Emergency stop - obstacle at ${distance}cm during movement`);
+          }
+          
+          resolve(false);
+          return;
+        }
+      }
+      
+      // Check every 200ms
+      await new Promise(resolve => setTimeout(resolve, 200));
+    }
+    
+    resolve(true);
+  });
+  
+  // Wait for both movement and monitoring
+  const [movementResult, monitoringResult] = await Promise.all([movementPromise, monitoringPromise]);
+  
+  return movementResult && monitoringResult;
+}
+
+// Make it globally available
+window.moveForwardWithObstacleDetection = moveForwardWithObstacleDetection;
+
 // Initialize the robot controller when the page loads
 let robotController;
 document.addEventListener('DOMContentLoaded', () => {

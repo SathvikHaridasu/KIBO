@@ -1306,6 +1306,53 @@ async function executeSmartIntent(parsed) {
       }
       break;
       
+    case "obstacle":
+    case "scan":
+      console.log("🛡️ Voice obstacle command:", parsed.action);
+      
+      if (parsed.action === "check" || parsed.action === "scan") {
+        if (typeof window.manualObstacleCheck === 'function') {
+          const result = await window.manualObstacleCheck();
+          if (result) {
+            const message = result.action === 'CLEAR' ? 
+              "Path is clear - safe to proceed" : 
+              `Obstacles detected - ${result.action} recommended`;
+              
+            if (typeof sayAndResume === 'function') {
+              sayAndResume(message);
+            }
+          }
+        }
+      } else if (parsed.action === "path" || parsed.action === "scan_path") {
+        if (typeof window.manualPathScan === 'function') {
+          const scanResult = await window.manualPathScan();
+          if (scanResult) {
+            const message = `Best path is ${scanResult.best_direction} with ${scanResult.best_distance} centimeters of clearance`;
+            if (typeof sayAndResume === 'function') {
+              sayAndResume(message);
+            }
+          }
+        }
+      }
+      break;
+
+    case "toggle":
+      if (parsed.target === "avoid" || parsed.target === "avoidance") {
+        console.log("🛡️ Voice toggle obstacle avoidance");
+        
+        if (typeof window.toggleObstacleAvoidance === 'function') {
+          window.toggleObstacleAvoidance();
+          const isEnabled = typeof window.isAutoAvoidEnabled === 'function' ? 
+            window.isAutoAvoidEnabled() : false;
+          
+          const message = `Obstacle avoidance is now ${isEnabled ? 'enabled' : 'disabled'}`;
+          if (typeof sayAndResume === 'function') {
+            sayAndResume(message);
+          }
+        }
+      }
+      break;
+      
     default:
       console.log("⚠️ Unknown intent");
       const unknownMsg = parsed.message || "I couldn't understand that command. Please try again.";
