@@ -743,3 +743,487 @@ async function detourStrategy(direction) {
     return false;
   }
 }
+
+// Reverse and retry strategy
+async function reverseAndRetryStrategy() {
+  console.log("🔄 REVERSE AND RETRY: Backing up and reassessing");
+  
+  try {
+    // Move backward
+    if (typeof moveBackward === 'function') {
+      await moveBackward(0.5);
+    }
+    
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Check obstacles again
+    const obstaclesAfterReverse = await checkForObstacles();
+    if (obstaclesAfterReverse.length === 0) {
+      console.log("✅ Obstacles cleared after reverse - resuming forward");
+      return true;
+    }
+    
+    // Try a detour strategy
+    return await detourStrategy("right");
+    
+  } catch (error) {
+    console.error("❌ Reverse and retry failed:", error);
+    return false;
+  }
+}
+
+// Emergency stop strategy
+async function emergencyStopStrategy() {
+  console.log("🚨 EMERGENCY STOP: Cannot safely proceed");
+  
+  if (typeof stopRobot === 'function') {
+    await stopRobot();
+  }
+  
+  const emergencyAnnouncement = "Cannot safely navigate around obstacles. Please assist or provide new directions.";
+  const utterance = new SpeechSynthesisUtterance(emergencyAnnouncement);
+  speechSynthesis.speak(utterance);
+  
+  // Reset navigation flags
+  navigationInProgress = false;
+  stopOnlyMode = false;
+  if (typeof window !== 'undefined') {
+    window.navigationInProgress = false;
+    window.stopOnlyMode = false;
+  }
+  
+  if (typeof setVoiceStatus === 'function') {
+    setVoiceStatus("🚨 Navigation paused - manual assistance needed");
+  }
+  
+  return false;
+}
+
+// ✅ Create visual rover marker
+function createRoverMarker() {
+  if (typeof window !== 'undefined' && window.roverMarker) {
+    window.roverMarker.setMap(null);
+  }
+  
+  if (typeof google !== 'undefined' && google.maps && typeof map !== 'undefined') {
+    window.roverMarker = new google.maps.Marker({
+      position: simulatedRoverPosition,
+      map: map,
+      title: "Kibo Robot",
+      icon: {
+        path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+        scale: 6,
+        fillColor: "#FF0000",
+        fillOpacity: 0.8,
+        strokeWeight: 2,
+        strokeColor: "#FFFFFF",
+        rotation: roverBearing
+      }
+    });
+  }
+}
+
+// ✅ Simulate rover movement based on real distances
+function simulateRoverMovement(command, realDistanceMeters) {
+  if (!simulatedRoverPosition) {
+    initializeSimulatedRover();
+  }
+  
+  console.log(`\n📍 === POSITION UPDATE ===`);
+  console.log(`Command: ${command}, Distance: ${realDistanceMeters}m`);
+  console.log(`Before - Lat: ${simulatedRoverPosition.lat.toFixed(8)}, Lng: ${simulatedRoverPosition.lng.toFixed(8)}, Bearing: ${roverBearing}°`);
+  
+  let newPosition = { ...simulatedRoverPosition };
+  
+  switch(command) {
+    case "forward":
+      if (realDistanceMeters > 0) {
+        // Convert to actual GPS distance (scaled)
+        const simulatedDistanceMeters = realDistanceMeters / 1000; // Scale down for testing
+        newPosition = moveInDirection(simulatedRoverPosition, roverBearing, simulatedDistanceMeters);
+        console.log(`✅ Moved forward ${realDistanceMeters}m (${simulatedDistanceMeters*1000}m GPS scale)`);
+      }
+      break;
+      
+    case "left":
+      roverBearing = (roverBearing - 90 + 360) % 360;
+      console.log(`✅ Turned left - now facing ${roverBearing}°`);
+      break;
+      
+    case "right": 
+      roverBearing = (roverBearing + 90) % 360;
+      console.log(`✅ Turned right - now facing ${roverBearing}°`);
+      break;
+      
+    case "backward":
+      if (realDistanceMeters > 0) {
+        const simulatedDistanceMeters = realDistanceMeters / 1000;
+        newPosition = moveInDirection(simulatedRoverPosition, (roverBearing + 180) % 360, simulatedDistanceMeters);
+        console.log(`✅ Moved backward ${realDistanceMeters}m`);
+      }
+      break;
+  }
+  
+  // Update rover position
+  simulatedRoverPosition = newPosition;
+  
+  console.log(`After  - Lat: ${simulatedRoverPosition.lat.toFixed(8)}, Lng: ${simulatedRoverPosition.lng.toFixed(8)}, Bearing: ${roverBearing}°`);
+  
+  // Update rover marker on map
+  if (typeof window !== 'undefined' && window.roverMarker) {
+    window.roverMarker.setPosition(simulatedRoverPosition);
+    window.roverMarker.setIcon({
+      path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+      scale: 8,
+      fillColor: "#FF0000", 
+      fillOpacity: 1,
+      strokeWeight: 2,
+      strokeColor: "#FFFFFF",
+      rotation: roverBearing
+    });
+  }
+  
+  console.log(`========================\n`);
+}
+
+// ✅ Helper function to move in a specific direction
+function moveInDirection(startPos, bearingDegrees, distanceMeters) {
+  const earthRadius = 6378137; // Earth's radius in meters
+  const bearingRadians = bearingDegrees * (Math.PI / 180);
+  
+  const lat1 = startPos.lat * (Math.PI / 180);
+  const lng1 = startPos.lng * (Math.PI / 180);
+  
+  const lat2 = Math.asin(
+    Math.sin(lat1) * Math.cos(distanceMeters / earthRadius) +
+    Math.cos(lat1) * Math.sin(distanceMeters / earthRadius) * Math.cos(bearingRadians)
+  );
+  
+  const lng2 = lng1 + Math.atan2(
+    Math.sin(bearingRadians) * Math.sin(distanceMeters / earthRadius) * Math.cos(lat1),
+    Math.cos(distanceMeters / earthRadius) - Math.sin(lat1) * Math.sin(lat2)
+  );
+  
+  return {
+    lat: lat2 * (180 / Math.PI),
+    lng: lng2 * (180 / Math.PI)
+  };
+}
+
+function calculateDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+          Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+          Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+}
+
+
+function startNavigationCleanly(routeResult) {
+  console.log("🚀 Starting clean navigation...");
+  
+  try {
+    if (typeof parseDirectionsToSteps === 'function') {
+      navigationSteps = parseDirectionsToSteps(routeResult);
+    } else {
+      console.error("❌ parseDirectionsToSteps function not available");
+      return;
+    }
+    
+    currentStepIndex = 0;
+    navigationActive = true;
+    // Notify app that navigation has started
+    if (typeof document !== 'undefined' && document.dispatchEvent) {
+      document.dispatchEvent(new CustomEvent('navigation:start'));
+    }
+    
+    // Initialize rover position
+    initializeSimulatedRover();
+    
+    // ✅ START LIVE MAP ANIMATION
+    startLiveMapAnimation(routeResult);
+    
+    if (typeof addToSummary === 'function') {
+      addToSummary("🚀 Navigation started");
+      addToSummary(`📋 Total steps: ${navigationSteps.length}`);
+      addToSummary("🎬 Live map tracking active"); // ← New
+    }
+    
+    console.log(`📋 Navigation plan - ${navigationSteps.length} steps total`);
+    
+    if (navigationSteps.length > 0) {
+      giveStepByStepInstruction(0);
+    }
+    
+    console.log("✅ Clean navigation with live animation started");
+    
+  } catch (error) {
+    console.error("❌ Navigation start failed:", error);
+  }
+}
+
+function executeRobotMovementForStep(stepIndex) {
+  if (stepIndex >= navigationSteps.length) {
+    console.log("❌ Step index out of range:", stepIndex);
+    return;
+  }
+  
+  const step = navigationSteps[stepIndex];
+  const distanceInMeters = step.distanceValue;
+  
+  console.log(`🤖 Executing movement for step ${stepIndex + 1}: ${step.instruction}`);
+  console.log(`🤖 Distance: ${step.distance} (${distanceInMeters}m)`);
+  
+  let robotCommand = "forward";
+  
+  if (step.maneuver === 'turn-left' || step.instruction.toLowerCase().includes('turn left')) {
+    robotCommand = "left";
+  } else if (step.maneuver === 'turn-right' || step.instruction.toLowerCase().includes('turn right')) {
+    robotCommand = "right";
+  } else {
+    robotCommand = "forward";
+  }
+  
+  // ✅ EXECUTE THE ACTUAL ROBOT MOVEMENT
+  executeRobotMovement(robotCommand, distanceInMeters);
+  
+  if (typeof addToSummary === 'function') {
+    addToSummary(`🤖 Executing step ${stepIndex + 1}: ${robotCommand} ${distanceInMeters}m`);
+  }
+}
+
+// ✅ SUPPORTING FUNCTION: Silent navigation start (NO speech calls)
+function startNavigationSilently(routeResult, startFromStep = 0) {
+  console.log("🚀 Starting navigation silently from step", startFromStep);
+  
+  try {
+    if (typeof parseDirectionsToSteps === 'function') {
+      navigationSteps = parseDirectionsToSteps(routeResult);
+    } else {
+      console.error("❌ parseDirectionsToSteps function not available");
+      return;
+    }
+    
+    currentStepIndex = startFromStep; // ✅ Start from step 0, not step 1
+    navigationActive = true;
+    // Notify app that navigation has started
+    if (typeof document !== 'undefined' && document.dispatchEvent) {
+      document.dispatchEvent(new CustomEvent('navigation:start'));
+    }
+    
+    // Initialize simulated rover position
+    initializeSimulatedRover();
+    
+    if (typeof addToSummary === 'function') {
+      addToSummary("🚀 Step-by-step navigation started");
+      addToSummary(`📋 Total steps: ${navigationSteps.length}`);
+    }
+    
+    if (currentStepIndex < navigationSteps.length) {
+      const currentStep = navigationSteps[currentStepIndex];
+      if (typeof addToSummary === 'function') {
+        addToSummary(`🧭 Monitoring step ${currentStepIndex + 1}: ${currentStep.instruction}`);
+      }
+    }
+    
+    if (typeof startRobotNavigationSilently === 'function') {
+      startRobotNavigationSilently();
+    }
+    startPositionTracking();
+    
+    if (typeof isCameraActive !== 'undefined' && isCameraActive && typeof startEnhancedDetectionLoop === 'function') {
+      startEnhancedDetectionLoop();
+    }
+    
+    console.log("✅ Silent navigation with rover simulation started");
+    
+  } catch (error) {
+    console.error("❌ Silent navigation start failed:", error);
+    if (typeof addToSummary === 'function') {
+      addToSummary("⚠️ Navigation started with limited features");
+    }
+  }
+}
+
+function testDistanceFormula() {
+  console.log("\n🧪 === TESTING DISTANCE FORMULA ===");
+  console.log("Formula: distanceMeters/100 = cm, cm*0.1 = seconds");
+  console.log("Examples:");
+  
+  const testDistances = [19, 50, 100, 214, 500, 1000, 1500];
+  
+  testDistances.forEach(distance => {
+    const realDistanceCm = distance / 100;
+    const duration = Math.max(0.05, Math.min(realDistanceCm * 0.1, 2.0));
+    console.log(`   ${distance}m → ${realDistanceCm.toFixed(1)}cm → ${duration.toFixed(3)}s`);
+  });
+  
+  console.log("=================================\n");
+}
+// ===== LIVE MAP ANIMATION SYSTEM =====
+let routeCoordinates = []; // All route points
+let currentRouteIndex = 0; // Current position along route
+let animationInterval = null;
+let routeProgress = 0; // 0 to 1 (0% to 100%)
+
+// Extract route coordinates from Google Maps result
+function extractRouteCoordinates(directionsResult) {
+  routeCoordinates = [];
+  
+  const route = directionsResult.routes[0];
+  if (!route) return;
+  
+  // Get all coordinate points from the route polyline
+  route.legs.forEach(leg => {
+    leg.steps.forEach(step => {
+      const path = step.path || [];
+      path.forEach(point => {
+        routeCoordinates.push({
+          lat: point.lat(),
+          lng: point.lng()
+        });
+      });
+    });
+  });
+  
+  // If no detailed path, use step start/end points
+  if (routeCoordinates.length === 0) {
+    route.legs.forEach(leg => {
+      leg.steps.forEach(step => {
+        routeCoordinates.push({
+          lat: step.start_location.lat(),
+          lng: step.start_location.lng()
+        });
+        routeCoordinates.push({
+          lat: step.end_location.lat(),
+          lng: step.end_location.lng()
+        });
+      });
+    });
+  }
+  
+  console.log(`🗺️ Route extracted: ${routeCoordinates.length} coordinate points`);
+  return routeCoordinates;
+}
+
+// Start animated movement along the route
+function startLiveMapAnimation(directionsResult) {
+  console.log("🎬 Starting live map animation...");
+  
+  // Extract route coordinates
+  extractRouteCoordinates(directionsResult);
+  
+  if (routeCoordinates.length === 0) {
+    console.log("❌ No route coordinates found");
+    return;
+  }
+  
+  // Start Kibo at the beginning of the route
+  currentRouteIndex = 0;
+  routeProgress = 0;
+  
+  const startPosition = routeCoordinates[0];
+  simulatedRoverPosition = { ...startPosition };
+  
+  // Create/update Kibo's marker
+  createAnimatedRoverMarker();
+  
+  // Center map on starting position
+  if (typeof map !== 'undefined') {
+    map.panTo(startPosition);
+    map.setZoom(16); // Close zoom for detailed view
+  }
+  
+  console.log("✅ Live animation initialized");
+}
+
+// Create enhanced rover marker for animation
+function createAnimatedRoverMarker() {
+  // Remove existing marker
+  if (typeof window !== 'undefined' && window.roverMarker) {
+    window.roverMarker.setMap(null);
+  }
+  
+  if (typeof google !== 'undefined' && google.maps && typeof map !== 'undefined') {
+    window.roverMarker = new google.maps.Marker({
+      position: simulatedRoverPosition,
+      map: map,
+      title: "Kibo Robot - Live Navigation",
+      icon: {
+        path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+        scale: 8,
+        fillColor: "#00FF00", // Green for active navigation
+        fillOpacity: 1,
+        strokeWeight: 3,
+        strokeColor: "#000000",
+        rotation: roverBearing
+      },
+      zIndex: 1000 // Keep on top
+    });
+    
+    // Add info window with progress
+    const infoWindow = new google.maps.InfoWindow({
+      content: `<div style="text-align:center">
+        <strong>🤖 Kibo Robot</strong><br>
+        <span style="color:#666">Navigation Progress: ${Math.round(routeProgress * 100)}%</span>
+      </div>`
+    });
+    
+    window.roverMarker.addListener('click', () => {
+      infoWindow.open(map, window.roverMarker);
+    });
+  }
+}
+
+// Animate Kibo along the route (call this during movement)
+function animateKiboMovement(command, distanceInMeters) {
+  if (routeCoordinates.length === 0) {
+    console.log("⚠️ No route coordinates for animation");
+    return;
+  }
+  
+  console.log(`🎬 Animating Kibo ${command} movement: ${distanceInMeters}m`);
+  
+  // Calculate how many route points to advance based on distance
+  const totalRouteDistance = calculateTotalRouteDistance();
+  const distanceRatio = distanceInMeters / totalRouteDistance;
+  const pointsToAdvance = Math.max(1, Math.floor(distanceRatio * routeCoordinates.length));
+  
+  const startIndex = currentRouteIndex;
+  const endIndex = Math.min(currentRouteIndex + pointsToAdvance, routeCoordinates.length - 1);
+  
+  console.log(`📍 Moving from point ${startIndex} to ${endIndex} (${pointsToAdvance} points)`);
+  
+  // Smooth animation between points
+  animateBetweenPoints(startIndex, endIndex, 2000); // 2 seconds animation
+}
+
+// Smooth animation between route points
+function animateBetweenPoints(startIndex, endIndex, durationMs) {
+  if (animationInterval) {
+    clearInterval(animationInterval);
+  }
+  
+  const startTime = Date.now();
+  const startPos = routeCoordinates[startIndex];
+  const endPos = routeCoordinates[endIndex];
+  
+  // Calculate bearing for arrow direction
+  const bearing = calculateBearing(startPos, endPos);
+  roverBearing = bearing;
+  
+  animationInterval = setInterval(() => {
+    const elapsed = Date.now() - startTime;
+    const progress = Math.min(elapsed / durationMs, 1);
+    
+    // Smooth interpolation between start and end
+    const currentPos = {
+      lat: startPos.lat + (endPos.lat - startPos.lat) * progress,
+      lng: startPos.lng + (endPos.lng - startPos.lng) * progress
+    };
+    
+    // Update Kibo's position
+    simulatedRoverPosition = currentPos;
