@@ -413,3 +413,464 @@ body {
     padding: var(--spacing-md);
   }
   
+  .sidebar {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 100;
+    border-radius: 0;
+    max-height: 100vh;
+  }
+  
+  .sidebar.active {
+    display: block;
+  }
+  
+  .map-wrap {
+    min-height: 60vh;
+  }
+  
+  .menu-toggle {
+    display: flex;
+  }
+  
+  .actions .btn-text {
+    display: none;
+  }
+  
+  .actions .btn {
+    padding: var(--spacing-sm);
+    min-width: 44px;
+    justify-content: center;
+  }
+  
+  .voice-chip span {
+    display: none;
+  }
+  
+  .brand-text h1 {
+    font-size: 1.25rem;
+  }
+  
+  .subtitle {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .topbar {
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
+  
+  .layout {
+    padding: var(--spacing-sm);
+  }
+  
+  .panel {
+    padding: var(--spacing-md);
+  }
+  
+  .sidebar-content {
+    padding: var(--spacing-md);
+  }
+  
+  .segmented {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .segmented label {
+    padding: var(--spacing-sm);
+    font-size: 0.75rem;
+  }
+  
+  .segmented label i {
+    font-size: 0.875rem;
+  }
+  
+  .btn.btn-large {
+    padding: var(--spacing-md);
+    font-size: 0.875rem;
+  }
+  
+  .floating-btn {
+    width: 44px;
+    height: 44px;
+  }
+  
+  .floating-btn i {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .topbar {
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm);
+  }
+  
+  .actions {
+    justify-content: center;
+    width: 100%;
+  }
+  
+  .voice-chip {
+    display: none;
+  }
+  
+  .camera-chip {
+    display: none;
+  }
+  
+  .layout {
+    padding: var(--spacing-xs);
+  }
+  
+  .panel {
+    padding: var(--spacing-sm);
+  }
+  
+  .sidebar-content {
+    padding: var(--spacing-sm);
+  }
+  
+  .segmented {
+    grid-template-columns: 1fr;
+  }
+  
+  .input-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .input-row .btn {
+    align-self: flex-end;
+  }
+  
+  .waypoint-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .waypoint-row .icon-btn {
+    align-self: flex-end;
+    width: 32px;
+    height: 32px;
+  }
+  
+  .floating-btn {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .floating-btn i {
+    font-size: 0.875rem;
+  }
+}
+
+/* Scrollbar Styling */
+.sidebar::-webkit-scrollbar,
+.console::-webkit-scrollbar,
+.transcript::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-track,
+.console::-webkit-scrollbar-track,
+.transcript::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+.sidebar::-webkit-scrollbar-thumb,
+.console::-webkit-scrollbar-thumb,
+.transcript::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover,
+.console::-webkit-scrollbar-thumb:hover,
+.transcript::-webkit-scrollbar-thumb:hover {
+  background: var(--border-light);
+}
+
+/* Animation Classes */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideIn {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes slideInFromBottom {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.sidebar.active {
+  animation: slideIn var(--transition-normal) ease-out;
+}
+
+.panel {
+  animation: fadeIn var(--transition-normal) ease-out;
+}
+
+/* Mobile-specific animations */
+@media (max-width: 1024px) {
+  .sidebar.active {
+    animation: slideInFromBottom var(--transition-normal) ease-out;
+  }
+}
+
+/* Focus States */
+.btn:focus,
+input:focus,
+.floating-btn:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Loading States */
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+  :root {
+    --border: #ffffff;
+    --border-light: #cccccc;
+    --text-muted: #ffffff;
+  }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Touch-friendly improvements for mobile */
+@media (hover: none) and (pointer: coarse) {
+  .btn {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  .floating-btn {
+    min-height: 48px;
+    min-width: 48px;
+  }
+  
+  .segmented label {
+    min-height: 44px;
+  }
+  
+  .checkbox-item {
+    min-height: 44px;
+  }
+  
+  input[type='text'] {
+    min-height: 44px;
+  }
+  
+  .waypoint-row input {
+    min-height: 44px;
+  }
+  
+  .icon-btn {
+    min-height: 32px;
+    min-width: 32px;
+  }
+}
+
+#map {
+  transform: translateZ(0); /* Force hardware acceleration */
+  will-change: transform; /* Hint for browser optimization */
+}
+
+/* Reduce repaints during navigation */
+.gm-style {
+  transform: translateZ(0);
+}
+
+/* Dark mode only - no light mode support */
+
+/* ===== CAMERA STYLES ===== */
+/* Sidebar Sections */
+.sidebar-section {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+  transition: all 0.2s ease;
+}
+
+.sidebar-section:last-child {
+  margin-bottom: 0;
+}
+
+.sidebar-section h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 0 0 1rem 0;
+  color: white;
+}
+
+.sidebar-section h3 i {
+  opacity: 0.8;
+}
+
+/* Inputs */
+.sidebar-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.75rem;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.5rem;
+  color: white;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.sidebar-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
+}
+
+/* Travel Modes */
+.travel-modes {
+  display: flex;
+  gap: 0.5rem;
+  margin: 0.75rem 0;
+}
+
+.travel-modes .mode {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.08);
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.5rem;
+  cursor: pointer;
+  font-size: 1.25rem;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.travel-modes .mode:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.travel-modes .mode.active {
+  background: var(--primary);
+  color: white;
+}
+
+/* Chips */
+.chips {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.chip {
+  background: rgba(59, 130, 246, 0.15);
+  color: var(--primary);
+  padding: 0.4rem 0.8rem;
+  border-radius: 1rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.chip:hover, .chip.active {
+  background: var(--primary);
+  color: white;
+}
+
+/* Quick Commands */
+.quick-commands {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin: 0.75rem 0;
+  padding-left: 1.25rem;
+}
+
+.quick-commands li {
+  margin: 0.25rem 0;
+  position: relative;
+}
+
+.quick-commands li:before {
+  content: '•';
+  position: absolute;
+  left: -1rem;
+  color: var(--primary);
+}
+
+/* Buttons */
+.actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.voice-btn {
+  width: 100%;
+  margin-top: 0.5rem;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.voice-btn:hover {
+  background: var(--primary-hover);
+  transform: translateY(-1px);
+}
+
+/* Camera Box */
+.camera-box {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 0.5rem;
+  aspect-ratio: 16/9;
+  margin: 0.75rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
