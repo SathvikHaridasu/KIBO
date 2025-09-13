@@ -208,8 +208,79 @@ function giveStepByStepInstruction(stepIndex) {
   executeRobotMovement(robotCommand, distanceInMeters);
 }
 
+// ===== OBSTACLE AVOIDANCE INTEGRATION =====
+async function checkObstaclesBeforeMovement(command, distanceInMeters) {
+  // Check if obstacle avoidance is available
+  if (typeof window.handleNavigationObstacles === 'function') {
+    console.log(`🛡️ Checking obstacles before ${command} movement`);
+    
+    const obstacleCheck = await window.handleNavigationObstacles(command, distanceInMeters);
+    
+    if (!obstacleCheck.safe) {
+      console.log(`🚨 Obstacle avoidance triggered: ${obstacleCheck.message}`);
+      
+      // Add to summary
+      if (typeof addToSummary === 'function') {
+        addToSummary(`🛡️ ${obstacleCheck.message}`);
+      }
+      
+      // Handle different actions
+      switch(obstacleCheck.action) {
+        case 'DETOUR':
+          // Announce detour recommendation
+          if (typeof sayAndResume === 'function') {
+            await sayAndResume(`Obstacle detected. I recommend going ${obstacleCheck.recommendation} where there's ${obstacleCheck.distance} centimeters of clearance.`);
+          }
+          
+          // For now, we'll pause navigation - in the future, could auto-detour
+          return { proceed: false, reason: 'obstacle_detour_needed' };
+          
+        case 'STOP':
+          // Emergency stop
+          if (typeof sayAndResume === 'function') {
+            await sayAndResume("Obstacle detected with no clear path. Stopping for safety.");
+          }
+          return { proceed: false, reason: 'obstacle_no_clear_path' };
+      }
+    }
+  }
+  
+  return { proceed: true, reason: 'path_clear' };
+}
+
 // Enhanced robot movement with obstacle detection
 async function executeRobotMovement(command, distanceInMeters) {
+  console.log(`\n🎯 ENHANCED ROBOT STEP WITH OBSTACLE CHECK: ${command.toUpperCase()} ${distanceInMeters}m`);
+  
+  // ✅ NEW: Check for obstacles before movement
+  const obstacleCheck = await checkObstaclesBeforeMovement(command, distanceInMeters);
+  
+  if (!obstacleCheck.proceed) {
+    console.log(`🛑 Movement blocked: ${obstacleCheck.reason}`);
+    
+    // Stop robot if it's moving
+    if (typeof stopRobot === 'function') {
+      await stopRobot();
+    }
+    
+    // Update navigation state
+    navigationInProgress = false;
+    stopOnlyMode = false;
+    
+    if (typeof window !== 'undefined') {
+      window.navigationInProgress = false;
+      window.stopOnlyMode = false;
+    }
+    
+    // Reset voice status
+    if (typeof setVoiceStatus === 'function') {
+      setVoiceStatus("🛡️ Navigation paused due to obstacles");
+    }
+    
+    return false; // Movement cancelled
+  }
+  
+  // Continue with existing executeRobotMovement code below...
   console.log(`\n🎯 ENHANCED ROBOT STEP: ${command.toUpperCase()} ${distanceInMeters}m`);
   
   // ✅ Enable navigation mode - only STOP commands allowed

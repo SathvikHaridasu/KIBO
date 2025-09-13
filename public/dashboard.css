@@ -955,7 +955,7 @@ h1 {
   .camera-header {
     flex-direction: column;
     align-items: flex-start;
-    gap: 0.5rem;
+    gap: var(--spacing-xs);
   }
   
   .camera-stats {
@@ -1399,4 +1399,301 @@ h1 {
 /* Ensure proper box-sizing for all elements */
 *, *::before, *::after {
   box-sizing: border-box;
+}
+
+/* ===== OBSTACLE AVOIDANCE STYLES ===== */
+.obstacle-avoidance-panel {
+    background: var(--bg-card);
+    border: 2px solid #ff9800;
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+}
+
+.obstacle-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-md);
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+}
+
+.obstacle-header h2 {
+    color: #ff9800;
+    margin: 0;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.obstacle-toggle-row {
+    display: flex;
+    gap: var(--spacing-xs);
+    flex-wrap: wrap;
+}
+
+.status-chip {
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+}
+
+.status-chip.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+.status-chip.warning {
+    background: var(--warning);
+    color: black;
+    border-color: var(--warning);
+}
+
+.status-chip.danger {
+    background: var(--error);
+    color: white;
+    border-color: var(--error);
+}
+
+.distance-display {
+    background: rgba(0,0,0,0.3);
+    padding: var(--spacing-md);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--spacing-md);
+    text-align: center;
+}
+
+.distance-meter {
+    margin-bottom: var(--spacing-sm);
+}
+
+.distance-value {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #00ff80;
+    margin-bottom: var(--spacing-sm);
+    font-family: 'Fira Code', monospace;
+}
+
+.distance-value .unit {
+    font-size: 1rem;
+    color: var(--text-muted);
+}
+
+.distance-bar {
+    width: 100%;
+    height: 8px;
+    background: var(--bg-tertiary);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: var(--spacing-sm);
+}
+
+.bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ef4444 0%, #f59e0b 50%, #10b981 100%);
+    width: 0%;
+    transition: width 0.3s ease;
+}
+
+.obstacle-warning {
+    background: var(--error);
+    color: white;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: 20px;
+    font-weight: bold;
+    font-size: 0.85rem;
+    animation: pulse-warning 1.5s infinite;
+    display: inline-block;
+}
+
+.obstacle-warning.hidden {
+    display: none;
+}
+
+@keyframes pulse-warning {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+.obstacle-controls {
+    display: flex;
+    gap: var(--spacing-xs);
+    margin-bottom: var(--spacing-md);
+    flex-wrap: wrap;
+}
+
+.obstacle-btn {
+    flex: 1;
+    min-width: 80px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    padding: var(--spacing-xs);
+    font-size: 0.75rem;
+    height: auto;
+    min-height: 50px;
+}
+
+.obstacle-btn i {
+    font-size: 1rem;
+}
+
+.obstacle-btn span {
+    font-size: 0.7rem;
+    line-height: 1.2;
+}
+
+.auto-avoid-off {
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+}
+
+.auto-avoid-on {
+    background: var(--error);
+    color: white;
+    border: 1px solid var(--error);
+    animation: pulse-avoid 2s infinite;
+}
+
+@keyframes pulse-avoid {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.8; }
+}
+
+.scan-btn {
+    background: var(--warning);
+    color: black;
+    border: 1px solid var(--warning);
+}
+
+.check-btn {
+    background: var(--primary);
+    color: white;
+    border: 1px solid var(--primary);
+}
+
+.obstacle-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.obstacle-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.scan-results {
+    background: rgba(245, 158, 11, 0.1);
+    border: 1px solid var(--warning);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
+}
+
+.scan-results.hidden {
+    display: none;
+}
+
+.scan-results h4 {
+    margin: 0 0 var(--spacing-sm) 0;
+    color: var(--warning);
+    font-size: 0.9rem;
+}
+
+.scan-directions {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: var(--spacing-sm);
+    gap: var(--spacing-xs);
+}
+
+.scan-direction {
+    text-align: center;
+    background: rgba(0,0,0,0.3);
+    padding: var(--spacing-xs);
+    border-radius: var(--radius-sm);
+    flex: 1;
+    min-width: 60px;
+}
+
+.direction-label {
+    display: block;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    margin-bottom: 0.25rem;
+}
+
+.direction-value {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: bold;
+    color: #00ff80;
+    font-family: 'Fira Code', monospace;
+}
+
+.best-direction {
+    text-align: center;
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: #00ff80;
+}
+
+/* Responsive adjustments for obstacle avoidance */
+@media (max-width: 768px) {
+    .obstacle-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .obstacle-toggle-row {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    .obstacle-controls {
+        flex-direction: row;
+        justify-content: space-between;
+    }
+    
+    .obstacle-btn {
+        flex: 1;
+        min-width: 70px;
+    }
+    
+    .scan-directions {
+        flex-direction: column;
+        gap: var(--spacing-xs);
+    }
+    
+    .distance-value {
+        font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .obstacle-controls {
+        flex-direction: column;
+    }
+    
+    .obstacle-btn {
+        width: 100%;
+        flex-direction: row;
+        justify-content: center;
+        min-height: 40px;
+    }
+    
+    .obstacle-btn span {
+        font-size: 0.8rem;
+    }
 }
