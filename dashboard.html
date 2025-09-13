@@ -1,15 +1,468 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Dashboard</title>
-  <link rel="stylesheet" href="dashboard.css">
-  <script src="dashboard.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Freenove Rover Control Dashboard</title>
+    <link rel="stylesheet" href="dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
-<body>
-  <div class="dashboard">
-    <h1>Dashboard</h1>
-    <div id="status">Status: Ready</div>
-  </div>
+<body class="dashboard-layout">
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <div class="brand">
+                <i class="fas fa-robot"></i>
+                <span class="brand-name">Freenove Rover</span>
+            </div>
+            <button class="sidebar-toggle" id="sidebar-toggle">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+        
+        <div class="sidebar-menu">
+            <div class="menu-section">
+                <h3 class="menu-title">Navigation</h3>
+                <ul>
+                    <li class="menu-item active">
+                        <a href="#dashboard">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="#controls">
+                            <i class="fas fa-gamepad"></i>
+                            <span>Controls</span>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="#telemetry">
+                            <i class="fas fa-chart-line"></i>
+                            <span>Telemetry</span>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="#settings">
+                            <i class="fas fa-cog"></i>
+                            <span>Settings</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="menu-section">
+                <h3 class="menu-title">System</h3>
+                <ul>
+                    <li class="menu-item">
+                        <a href="#logs">
+                            <i class="fas fa-terminal"></i>
+                            <span>System Logs</span>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="#help">
+                            <i class="fas fa-question-circle"></i>
+                            <span>Help & Support</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="sidebar-footer">
+            <div class="connection-status">
+                <span class="status-indicator" id="connection-indicator"></span>
+                <span id="connection-status-text">Disconnected</span>
+            </div>
+            <div class="battery-status">
+                <i class="fas fa-battery-quarter"></i>
+                <span class="battery-level">--%</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Navigation Bar -->
+        <header class="topbar">
+            <div class="topbar-left">
+                <button class="menu-toggle" id="menu-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h1>Dashboard</h1>
+            </div>
+            <div class="topbar-right">
+                <div class="topbar-actions">
+                    <button class="btn btn-icon" title="Fullscreen">
+                        <i class="fas fa-expand"></i>
+                    </button>
+                    <button class="btn btn-icon" title="Notifications">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-badge">3</span>
+                    </button>
+                    <div class="user-profile">
+                        <img src="https://ui-avatars.com/api/?name=Operator&background=3b82f6&color=fff" alt="User">
+                        <span>Operator</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Loading Screen -->
+        <div id="loading-screen">
+            <div class="loading-content">
+                <div class="spinner">
+                    <div class="double-bounce1"></div>
+                    <div class="double-bounce2"></div>
+                </div>
+                <h2>Connecting to Rover...</h2>
+                <p id="loading-message">Establishing connection to Freenove Rover</p>
+                <div id="connection-status" class="status-disconnected">
+                    <span id="connection-status-text">Disconnected</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content (initially hidden) -->
+        <div id="dashboard-content" style="display: none;">
+            <header class="topbar">
+                <div class="brand">
+                    <div class="brand-icon">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="brand-text">
+                        <h1>Freenove Rover Control</h1>
+                        <p class="subtitle">Real-time Monitoring & Control</p>
+                    </div>
+                </div>
+                <div class="actions">
+                    <div id="connection-indicator" class="connection-indicator">
+                        <span class="indicator-dot"></span>
+                        <span>Connected</span>
+                    </div>
+                    <button class="btn btn-ghost" id="settings-btn">
+                        <i class="fas fa-cog"></i> Settings
+                    </button>
+                    <button class="btn btn-danger" id="emergency-stop">
+                        <i class="fas fa-stop-circle"></i> Emergency Stop
+                    </button>
+                </div>
+            </header>
+
+            <!-- MAIN GRID -->
+            <main id="main" class="layout-grid">
+                <!-- LEFT PANEL: Detection Summary + Metrics -->
+                <aside class="left-panel">
+                    <section class="card detection-summary">
+                        <h2>🚧 Detection Summary</h2>
+                        <ul>
+                            <li>Obstacles: <span id="obstacle-count">2</span></li>
+                            <li>Crosswalks: <span id="crosswalk-status">Clear ✅</span></li>
+                            <li>Vehicles: <span id="vehicle-count">0</span></li>
+                            <li>Action: <span id="current-action">PROCEED</span></li>
+                        </ul>
+                    </section>
+                    <section class="card metrics">
+                        <h2>📈 Performance</h2>
+                        <canvas id="fpsChart"></canvas>
+                        <div class="system-metrics">
+                            <p>CPU: <span>24%</span></p>
+                            <p>Memory: <span>1.3 GB</span></p>
+                            <p>Latency: <span>23ms</span></p>
+                            <p>Temp: <span>42°C</span></p>
+                        </div>
+                    </section>
+                </aside>
+
+                <!-- CENTER: Dual Camera Feeds -->
+                <section class="camera-feeds">
+                    <!-- Detection Stream -->
+                    <div class="camera-feed card detection-feed">
+                        <div class="camera-header">
+                            <h2><i class="fas fa-robot"></i> AI Detection Feed</h2>
+                            <div class="camera-stats">
+                                <span class="stat"><i class="fas fa-eye"></i> <span id="detection-objects">0</span> Objects</span>
+                                <span class="stat"><i class="fas fa-exclamation-triangle"></i> <span id="threat-level">Safe</span></span>
+                            </div>
+                        </div>
+                        <div class="video-container">
+                            <img src="" alt="AI Detection Feed" id="detection-stream" class="camera-stream"/>
+                            <div class="crosshair"></div>
+                            <div class="overlay-stats">
+                                <div class="stat-item">
+                                    <i class="fas fa-brain"></i>
+                                    <span class="detection-status">AI Ready</span>
+                                </div>
+                                <div class="stat-item">
+                                    <i class="fas fa-shield-alt"></i>
+                                    <span class="safety-status">Safe</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Regular Camera Stream -->
+                    <div class="camera-feed card regular-feed">
+                        <div class="camera-header">
+                            <h2><i class="fas fa-video"></i> Live Camera Feed</h2>
+                            <div class="camera-stats">
+                                <span class="stat"><i class="fas fa-tachometer-alt"></i> <span id="fps-counter">0</span> FPS</span>
+                                <span class="stat"><i class="fas fa-clock"></i> <span id="latency">0</span>ms</span>
+                            </div>
+                        </div>
+                        <div class="video-container">
+                            <img src="" alt="Live Camera Feed" id="camera-stream" class="camera-stream"/>
+                            <div class="crosshair"></div>
+                            <div class="overlay-stats">
+                                <div class="stat-item">
+                                    <i class="fas fa-bolt"></i>
+                                    <span class="robo-battery">--%</span>
+                                </div>
+                                <div class="stat-item">
+                                    <i class="fas fa-thermometer-half"></i>
+                                    <span class="robo-temp">--°C</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Shared Camera Controls -->
+                    <div class="camera-controls-shared">
+                        <button class="btn btn-sm btn-danger" id="stop-streams" style="display: none;">
+                            <i class="fas fa-stop"></i> Stop Streams
+                        </button>
+                        <div class="zoom-controls">
+                            <button class="btn-icon" id="zoom-out"><i class="fas fa-search-minus"></i></button>
+                            <div class="zoom-level">1x</div>
+                            <button class="btn-icon" id="zoom-in"><i class="fas fa-search-plus"></i></button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- RIGHT PANEL -->
+                <aside class="right-panel">
+                    <!-- System Status -->
+                    <section class="card status-panel">
+                        <h2><i class="fas fa-robot"></i> Rover Status</h2>
+                        <div class="status-grid">
+                            <div class="status-item">
+                                <span class="status-label">Mode:</span>
+                                <span class="status-value robo-mode">--</span>
+                            </div>
+                            <div class="status-item">
+                                <span class="status-label">Battery:</span>
+                                <span class="status-value">
+                                    <span class="battery-level">--%</span>
+                                    <span class="battery-indicator">
+                                        <span class="battery-fill" style="width: 0%;"></span>
+                                    </span>
+                                </span>
+                            </div>
+                            <div class="status-item">
+                                <span class="status-label">Speed:</span>
+                                <span class="status-value robo-speed">0 m/s</span>
+                            </div>
+                            <div class="status-item">
+                                <span class="status-label">Direction:</span>
+                                <span class="status-value robo-direction">--</span>
+                            </div>
+                            <div class="status-item">
+                                <span class="status-label">CPU Temp:</span>
+                                <span class="status-value robo-temp">--°C</span>
+                            </div>
+                            <div class="status-item">
+                                <span class="status-label">Distance:</span>
+                                <span class="status-value robo-distance">-- cm</span>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Telemetry Chart -->
+                    <section class="card">
+                        <h2><i class="fas fa-chart-line"></i> Telemetry</h2>
+                        <div class="chart-container">
+                            <canvas id="telemetryChart"></canvas>
+                        </div>
+                    </section>
+
+                    <!-- System Logs -->
+                    <section class="card">
+                        <div class="log-header">
+                            <h2><i class="fas fa-terminal"></i> System Logs</h2>
+                            <button class="btn btn-sm btn-ghost" id="clear-logs">
+                                <i class="fas fa-trash"></i> Clear
+                            </button>
+                        </div>
+                        <div class="log-container" id="system-logs">
+                            <div class="log-entry info">[12:30:45] System initialized</div>
+                            <div class="log-entry success">[12:30:46] Connected to rover</div>
+                            <div class="log-entry">[12:31:02] Camera stream started</div>
+                        </div>
+                    </section>
+
+                    <!-- Manual Control -->
+                    <section class="card manual-control">
+                        <h2>🎮 Manual Control</h2>
+                        <button class="btn btn-danger stop-btn">🛑 STOP</button>
+                        <div class="controls">
+                            <button class="btn">⬆️</button>
+                            <div>
+                                <button class="btn">⬅️</button>
+                                <button class="btn">➡️</button>
+                            </div>
+                            <button class="btn">⬇️</button>
+                        </div>
+                        <button class="btn btn-ghost">Take Manual Control</button>
+                        <button class="btn btn-secondary">Resume Autonomous</button>
+                    </section>
+                </aside>
+            </main>
+
+            <!-- ACTIVITY LOG -->
+            <footer class="activity-log card">
+                <h2>📝 Activity Log</h2>
+                <ul>
+                    <li>14:32:15 - 🟢 PROCEED - Path clear</li>
+                    <li>14:32:10 - 🛑 STOP_CROSSWALK - Crosswalk detected</li>
+                    <li>14:32:05 - 🟡 PROCEED_CAUTIOUSLY - Vehicles stopped</li>
+                </ul>
+            </footer>
+        </div> <!-- End of dashboard-content -->
+        
+        <!-- Footer -->
+        <footer class="main-footer">
+            <div class="footer-content">
+                <div class="footer-left">
+                    <span>Freenove Rover Control v1.0.0</span>
+                </div>
+                <div class="footer-right">
+                    <span>Uptime: <span id="uptime-counter">00:00:00</span></span>
+                    <span>FPS: <span id="fps-counter">0</span></span>
+                    <span>CPU: <span id="cpu-usage">--%</span></span>
+                    <span>RAM: <span id="ram-usage">--%</span></span>
+                </div>
+            </div>
+        </footer>
+    </div> <!-- End of main-content -->
+
+    <script src="dashboard.js"></script>
+    <script>
+        // Toggle sidebar on mobile
+        document.getElementById('menu-toggle').addEventListener('click', () => {
+            document.body.classList.toggle('sidebar-collapsed');
+        });
+
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', (e) => {
+            const sidebar = document.querySelector('.sidebar');
+            const menuToggle = document.getElementById('menu-toggle');
+            
+            if (window.innerWidth <= 768 && 
+                !sidebar.contains(e.target) && 
+                !menuToggle.contains(e.target) &&
+                !document.body.classList.contains('sidebar-collapsed')) {
+                document.body.classList.add('sidebar-collapsed');
+            }
+        });
+
+        // Update uptime counter
+        function updateUptime() {
+            let seconds = 0;
+            const uptimeElement = document.getElementById('uptime-counter');
+            
+            setInterval(() => {
+                seconds++;
+                const hours = Math.floor(seconds / 3600).toString().padStart(2, '0');
+                const minutes = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
+                const secs = (seconds % 60).toString().padStart(2, '0');
+                uptimeElement.textContent = `${hours}:${minutes}:${secs}`;
+            }, 1000);
+        }
+
+        // Initialize components when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            updateUptime();
+            
+            // Initialize tooltips
+            const tooltipTriggers = document.querySelectorAll('[title]');
+            tooltipTriggers.forEach(trigger => {
+                // Add tooltip functionality here if needed
+            });
+        });
+    </script>
+    <script>
+        // Initialize charts and other UI components
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize telemetry chart
+            const ctx = document.getElementById('telemetryChart').getContext('2d');
+            const telemetryChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            label: 'Battery %',
+                            data: [],
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            borderWidth: 2,
+                            fill: false,
+                            tension: 0.1
+                        },
+                        {
+                            label: 'CPU Temp °C',
+                            data: [],
+                            borderColor: 'rgba(255, 99, 132, 1)',
+                            borderWidth: 2,
+                            fill: false,
+                            tension: 0.1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: false
+                        }
+                    },
+                    animation: {
+                        duration: 0 // Disable animation for better performance
+                    }
+                }
+            });
+
+            // Store chart reference for updates
+            window.telemetryChart = telemetryChart;
+
+            // Add log entry helper
+            window.addLog = function(message, type = 'info') {
+                const logContainer = document.getElementById('system-logs');
+                const timestamp = new Date().toTimeString().split(' ')[0];
+                const logEntry = document.createElement('div');
+                logEntry.className = `log-entry ${type}`;
+                logEntry.textContent = `[${timestamp}] ${message}`;
+                logContainer.prepend(logEntry);
+                
+                // Limit number of log entries
+                while (logContainer.children.length > 50) {
+                    logContainer.removeChild(logContainer.lastChild);
+                }
+            };
+
+            // Clear logs button
+            document.getElementById('clear-logs').addEventListener('click', () => {
+                document.getElementById('system-logs').innerHTML = '';
+                addLog('Logs cleared');
+            });
+
+            // Add initial log entry
+            addLog('Dashboard initialized', 'success');
+        });
+    </script>
 </body>
 </html>
