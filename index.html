@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Simple Google Maps UI Clone</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: Arial, sans-serif;
+    }
+    .top-bar {
+      background: #fff;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      position: absolute;
+      width: 100%;
+      z-index: 2;
+    }
+    .logo {
+      font-weight: bold;
+      color: #4285F4;
+      font-size: 1.2em;
+      margin-right: 20px;
+    }
+    .search-box {
+      flex: 1;
+      display: flex;
+      align-items: center;
+    }
+    .search-box input {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 1em;
+    }
+    .map-container {
+      position: absolute;
+      top: 50px;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: #e5e3df;
+      z-index: 1;
+    }
+    .side-panel {
+      position: absolute;
+      top: 50px;
+      left: 0;
+      width: 300px;
+      bottom: 0;
+      background: rgba(255,255,255,0.95);
+      box-shadow: 2px 0 8px rgba(0,0,0,0.1);
+      z-index: 3;
+      padding: 20px;
+      display: none;
+    }
+    .menu-btn {
+      background: none;
+      border: none;
+      font-size: 1.5em;
+      margin-right: 15px;
+      cursor: pointer;
+    }
+    @media (max-width: 600px) {
+      .side-panel {
+        width: 80vw;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <button class="menu-btn" onclick="togglePanel()">&#9776;</button>
+    <span class="logo">Maps</span>
+    <div class="search-box">
+      <input type="text" placeholder="Search Google Maps">
+    </div>
+  </div>
+  <div class="side-panel" id="sidePanel">
+    <h3>Menu</h3>
+    <ul>
+      <li>Directions</li>
+      <li>Traffic</li>
+      <li>Satellite</li>
+      <li>Your places</li>
+    </ul>
+  </div>
+  <div class="map-container">
+    <!-- Placeholder for map -->
+    <svg width="100%" height="100%">
+      <rect width="100%" height="100%" fill="#cfd8dc"/>
+      <text x="50%" y="50%" text-anchor="middle" fill="#888" font-size="32" dy=".3em">Map Area</text>
+    </svg>
+  </div>
+  <script>
+    function togglePanel() {
+      const panel = document.getElementById('sidePanel');
+      panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+    }
+  </script>
+</body>
+</html>
