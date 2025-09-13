@@ -1,48 +1,208 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Simple Google Maps UI Clone</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="dashboard.css">
-  <script src="app.js"></script>
-  <script src="map.js"></script>
-  <script src="navigation.js"></script>
-  <script src="camera.js"></script>
-  <script src="detection_client.js"></script>
-  <script src="gemini.js"></script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Kibo — Voice Maps (Gemini)</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- TensorFlow.js and COCO-SSD for object detection -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.15.0/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js"></script>
 </head>
 <body>
-  <div class="top-bar">
-    <button class="menu-btn" onclick="togglePanel()">&#9776;</button>
-    <span class="logo">Maps</span>
-    <div class="search-box">
-      <input type="text" placeholder="Search Google Maps">
+  <a class="skip" href="#main">Skip to main content</a>
+
+  <!-- Camera elements for computer vision -->
+  <div id="cameraContainer" style="display: none; position: absolute; top: -9999px; left: -9999px;">
+    <video id="cameraVideo" autoplay muted playsinline style="width: 320px; height: 240px;"></video>
+    <canvas id="detectionCanvas" width="320" height="240" style="width: 320px; height: 240px;"></canvas>
+  </div>
+
+  <header class="topbar" role="banner">
+    <div class="brand" aria-label="Kibo Voice Maps">
+      <div class="brand-icon">
+        <img src="robo.png" alt="Kibo Logo" style="width: 78px; height: 78px;">
+      </div>
+      <div class="brand-text">
+        <h1>Kibo</h1>
+        <p class="subtitle">Voice-first maps • Gemini-powered</p>
+      </div>
     </div>
-  </div>
-  <div class="side-panel" id="sidePanel">
-    <h3>Menu</h3>
-    <ul>
-      <li>Directions</li>
-      <li>Traffic</li>
-      <li>Satellite</li>
-      <li>Your places</li>
-    </ul>
-  </div>
-  <div class="map-container">
-    <!-- Placeholder for map -->
-    <svg width="100%" height="100%">
-      <rect width="100%" height="100%" fill="#cfd8dc"/>
-      <text x="50%" y="50%" text-anchor="middle" fill="#888" font-size="32" dy=".3em">Map Area</text>
-    </svg>
-    <div id="summary" style="position:absolute;bottom:10px;left:10px;width:300px;height:100px;background:#fff8;overflow:auto;padding:8px;border-radius:8px;"></div>
-    <div id="assistantOutput" style="position:absolute;bottom:120px;left:10px;width:300px;background:#fff8;padding:8px;border-radius:8px;"></div>
-  </div>
-  <script>
-    function togglePanel() {
-      const panel = document.getElementById('sidePanel');
-      panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
-    }
-  </script>
+
+    <div class="actions">
+      <div class="voice-chip" id="voiceStatus" aria-live="polite">
+        <span>Voice: idle</span>
+      </div>
+      <div class="camera-chip" id="cameraStatus" aria-live="polite">
+        <i class="fas fa-camera"></i>
+        <span>Camera: inactive</span>
+      </div>
+      <button id="toggleVoiceBtn" class="btn primary" aria-pressed="false" aria-label="Enable Kibo voice">
+        <i class="fas fa-microphone"></i>
+        <span class="btn-text">Enable Voice</span>
+      </button>
+      <button id="toggleCameraBtn" class="btn btn-secondary" aria-pressed="false" aria-label="Toggle camera">
+        <i class="fas fa-camera"></i>
+        <span class="btn-text">Start Camera</span>
+      </button>
+      <button id="locateMeBtn" class="btn btn-secondary" aria-label="Use my location">
+        <i class="fas fa-location-arrow"></i>
+        <span class="btn-text">My Location</span>
+      </button>
+      <button id="resetBtn" class="btn btn-ghost">
+        <i class="fas fa-undo"></i>
+        <span class="btn-text">Reset</span>
+      </button>
+      <a href="dashboard.html" id="dashboardBtn" class="btn btn-secondary" aria-label="Go to dashboard">
+        <i class="fas fa-tachometer-alt"></i>
+        <span class="btn-text">Dashboard</span>
+      </a>
+      <button id="menuToggle" class="btn btn-ghost menu-toggle" aria-label="Toggle menu">
+        <i class="fas fa-bars"></i>
+      </button>
+    </div>
+  </header>
+
+  <main id="main" class="layout" role="main">
+    <aside class="sidebar" id="sidebar">
+      <header class="sidebar-header">
+        <h2>Robot Control Panel</h2>
+        <button class="close-sidebar" id="closeSidebar" aria-label="Close sidebar">
+          <i class="fas fa-times"></i>
+        </button>
+      </header>
+
+      <!-- Directions -->
+      <section class="sidebar-section">
+        <h3><i class="fas fa-route"></i> Directions</h3>
+        <input type="text" id="origin" placeholder="Origin" class="sidebar-input" />
+        <input type="text" id="destination" placeholder="Destination" class="sidebar-input" />
+        <button id="addWaypointBtn" class="btn btn-ghost add-waypoint">
+          <i class="fas fa-plus"></i> Add Waypoint
+        </button>
+        <div class="travel-modes">
+          <button class="mode active" data-mode="DRIVING" aria-label="Driving">🚗</button>
+          <button class="mode" data-mode="WALKING" aria-label="Walking">🚶</button>
+          <button class="mode" data-mode="TRANSIT" aria-label="Transit">🚌</button>
+          <button class="mode" data-mode="BICYCLING" aria-label="Bicycling">🚴</button>
+        </div>
+        <div class="actions">
+          <button id="routeBtn" class="btn primary">
+            <i class="fas fa-directions"></i> Get Directions
+          </button>
+          <button id="clearBtn" class="btn btn-ghost">
+            <i class="fas fa-trash"></i> Clear
+          </button>
+        </div>
+      </section>
+
+      <!-- Map Layers -->
+      <section class="sidebar-section collapsible">
+        <h3><i class="fas fa-layer-group"></i> Layers</h3>
+        <div class="chips">
+          <span class="chip" data-layer="traffic">Traffic</span>
+          <span class="chip" data-layer="transit">Transit</span>
+          <span class="chip" data-layer="bicycling">Cycling</span>
+        </div>
+      </section>
+
+      <!-- Voice -->
+      <section class="sidebar-section collapsible">
+        <h3><i class="fas fa-microphone"></i> Voice</h3>
+        
+        <!-- Assistant Output Display -->
+        <div id="assistantOutput" class="assistant-output" style="padding: 10px; background: #f0f0f0; border-radius: 5px; margin: 10px 0; min-height: 40px; font-weight: 500; color: #333;">
+          🤖 Assistant ready...
+        </div>
+        
+        <!-- Voice Transcript Display -->
+        <div id="transcript" class="transcript" style="padding: 8px; background: #e8f4f8; border-radius: 3px; margin: 5px 0; font-style: italic; min-height: 30px; font-size: 0.9em; color: #666;">
+          🎤 Voice commands will appear here...
+        </div>
+        
+        <p class="hint">Say things like:</p>
+        <ul class="quick-commands">
+          <li>"Find nearest McDonald's"</li>
+          <li>"Show traffic"</li>
+          <li>"Stop moving"</li>
+        </ul>
+        <button id="toggleVoiceBtn" class="btn voice-btn">
+          <i class="fas fa-microphone"></i> Start Listening
+        </button>
+      </section>
+
+      <!-- Camera -->
+      <section class="sidebar-section collapsible">
+        <h3><i class="fas fa-camera"></i> Camera</h3>
+        <div id="cameraPanel" class="camera-box">
+          <div class="camera-placeholder">
+            <i class="fas fa-camera"></i>
+            <p>Camera feed will appear here</p>
+          </div>
+          <img id="cameraFeed" class="camera-feed" style="display: none;" alt="Live Camera Feed" />
+        </div>
+        <div class="camera-controls">
+          <button id="startCameraBtn" class="btn btn-ghost sm">
+            <i class="fas fa-play"></i> Start Feed
+          </button>
+          <button id="stopCameraBtn" class="btn btn-ghost sm" style="display: none;">
+            <i class="fas fa-stop"></i> Stop Feed
+          </button>
+        </div>
+      </section>
+
+      <!-- Markers -->
+      <section class="sidebar-section collapsible">
+        <h3><i class="fas fa-map-marker-alt"></i> Markers</h3>
+        <p>Click map to drop a marker</p>
+        <button id="clearMarkersBtn" class="btn btn-ghost">
+          <i class="fas fa-eraser"></i> Clear Markers
+        </button>
+      </section>
+
+      <!-- Trip -->
+      <section class="sidebar-section collapsible">
+        <h3><i class="fas fa-route"></i> Trip</h3>
+        <div id="summary" class="summary"></div>
+      </section>
+    </aside>
+
+    <section class="map-wrap" aria-label="Map">
+      <div id="map"></div>
+
+      <div class="map-overlay">
+        <button class="floating-btn" id="sidebarToggle" aria-label="Open navigation panel">
+          <i class="fas fa-bars"></i>
+        </button>
+      </div>
+    </section>
+  </main>
+
+
+  <script src="robot.js"></script>
+  <!-- Robot Control Section -->
+  <div class="robot-controls">
+    <div class="status-display">
+      <div id="robotStatus" class="status-indicator">Robot: Initializing...</div>
+      <div id="cameraStatus" class="status-indicator">Camera: Initializing...</div>
+      <div id="detectionStatus" class="status-indicator">Detection: Initializing...</div>
+    </div>
+  
+  <script src="gemini.js"></script>
+  <script src="map.js"></script>
+  <script src="navigation.js"></script>  
+  <script src="camera.js"></script>
+  <script src="detection_client.js"></script>
+  <script src="sidebar.js"></script>
+  <script src="voice.js"></script>
+  <script src="app.js"></script>
+  
+  <!-- Left-edge hotspot for sidebar reveal -->
+  <div id="leftEdgeHotspot" aria-hidden="true"></div>
 </body>
 </html>
