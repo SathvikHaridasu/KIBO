@@ -2,8 +2,8 @@ class RoverDashboard {
     constructor() {
         this.isConnected = false;
         this.updateInterval = null;
-        this.PI_IP = "10.0.0.22"; // Your Raspberry Pi IP
-        
+        this.PI_IP = "10.37.117.213"; // Your Raspberry Pi IP
+
         this.statusElements = {
             battery: document.querySelector('.battery-level'),
             mode: document.querySelector('.robo-mode'),
