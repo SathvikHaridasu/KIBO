@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Freenove Rover Control Dashboard</title>
     <link rel="stylesheet" href="dashboard.css">
+    <link rel="stylesheet" href="sentiment.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -281,11 +282,57 @@
                         </div>
                     </section>
 
+                    <!-- Sentiment Analysis Panel -->
+                    <section class="card sentiment-panel">
+                        <div class="panel-header">
+                            <h2><i class="fas fa-brain"></i> Sentiment Analysis</h2>
+                            <button class="btn btn-sm btn-primary" id="genesys-auth-btn">
+                                <i class="fas fa-sign-in-alt"></i> Connect to Genesys
+                            </button>
+                        </div>
+                        
+                        <div class="sentiment-status">
+                            <div class="status-item">
+                                <span class="status-label">Connection:</span>
+                                <span class="status-value" id="genesys-auth-status">Not connected</span>
+                            </div>
+                            <div class="status-item">
+                                <span class="status-label">Current Sentiment:</span>
+                                <span class="status-value">
+                                    <span id="sentiment-display" class="sentiment-neutral">Neutral</span>
+                                    <span id="sentiment-indicator" class="sentiment-indicator neutral"></span>
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="topics-section">
+                            <h3>Detected Topics</h3>
+                            <div id="topics-container" class="topics-container">
+                                <span class="no-topics">No topics detected</span>
+                            </div>
+                        </div>
+                        
+                        <div id="sentiment-alerts" class="sentiment-alerts"></div>
+                    </section>
+
                     <!-- Telemetry Chart -->
                     <section class="card">
                         <h2><i class="fas fa-chart-line"></i> Telemetry</h2>
                         <div class="chart-container">
                             <canvas id="telemetryChart"></canvas>
+                        </div>
+                    </section>
+
+                    <!-- Interaction History -->
+                    <section class="card">
+                        <div class="log-header">
+                            <h2><i class="fas fa-comments"></i> Voice Interactions</h2>
+                            <button class="btn btn-sm btn-ghost" id="clear-interactions">
+                                <i class="fas fa-trash"></i> Clear
+                            </button>
+                        </div>
+                        <div class="interaction-container" id="interaction-history">
+                            <div class="no-interactions">No voice interactions yet</div>
                         </div>
                     </section>
 
@@ -349,6 +396,7 @@
         </footer>
     </div> <!-- End of main-content -->
 
+    <script src="sentiment.js"></script>
     <script src="dashboard.js"></script>
     <script>
         // Toggle sidebar on mobile
@@ -459,6 +507,32 @@
                 document.getElementById('system-logs').innerHTML = '';
                 addLog('Logs cleared');
             });
+
+            // Clear interactions button
+            document.getElementById('clear-interactions').addEventListener('click', () => {
+                if (window.sentimentAnalyzer) {
+                    window.sentimentAnalyzer.interactionHistory = [];
+                    window.sentimentAnalyzer.updateHistoryUI();
+                }
+            });
+
+            // Genesys authentication button
+            document.getElementById('genesys-auth-btn').addEventListener('click', () => {
+                if (window.sentimentAnalyzer) {
+                    window.sentimentAnalyzer.startAuth();
+                }
+            });
+
+            // Set up sentiment analysis callbacks
+            if (window.sentimentAnalyzer) {
+                window.sentimentAnalyzer.onSentimentChange((sentiment, previous) => {
+                    addLog(`Sentiment changed: ${previous} → ${sentiment}`, 'info');
+                });
+
+                window.sentimentAnalyzer.onHighPriorityAlert((analysis) => {
+                    addLog(`High priority alert: ${analysis.response.message}`, 'warning');
+                });
+            }
 
             // Add initial log entry
             addLog('Dashboard initialized', 'success');

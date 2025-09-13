@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Kibo — Voice Maps (Gemini)</title>
   <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="sentiment.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -125,6 +126,20 @@
           🎤 Voice commands will appear here...
         </div>
         
+        <!-- Sentiment Analysis Display -->
+        <div class="sentiment-widget" style="padding: 8px; background: #f8f9fa; border-radius: 3px; margin: 5px 0; border: 1px solid #dee2e6;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+            <span style="font-size: 0.8em; color: #666; font-weight: 500;">Sentiment Analysis</span>
+            <button id="genesys-auth-btn-mini" class="btn btn-sm" style="padding: 2px 6px; font-size: 0.7em;">
+              <i class="fas fa-sign-in-alt"></i> Connect
+            </button>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span id="sentiment-display-mini" class="sentiment-neutral" style="padding: 2px 6px; border-radius: 3px; font-size: 0.75em; font-weight: 600;">Neutral</span>
+            <span id="sentiment-indicator-mini" class="sentiment-indicator neutral" style="width: 8px; height: 8px; border-radius: 50%;"></span>
+          </div>
+        </div>
+        
         <p class="hint">Say things like:</p>
         <ul class="quick-commands">
           <li>"Find nearest McDonald's"</li>
@@ -194,6 +209,7 @@
     </div>
   
   <script src="gemini.js"></script>
+  <script src="sentiment.js"></script>
   <script src="map.js"></script>
   <script src="navigation.js"></script>  
   <script src="camera.js"></script>

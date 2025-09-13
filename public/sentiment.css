@@ -1,0 +1,472 @@
+/* ===== SENTIMENT ANALYSIS STYLES ===== */
+
+/* Sentiment Panel */
+.sentiment-panel {
+    margin-bottom: 1rem;
+}
+
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.panel-header h2 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #333;
+}
+
+.sentiment-status {
+    margin-bottom: 1rem;
+}
+
+.sentiment-status .status-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #eee;
+}
+
+.sentiment-status .status-item:last-child {
+    border-bottom: none;
+}
+
+.status-label {
+    font-weight: 500;
+    color: #666;
+}
+
+.status-value {
+    font-weight: 600;
+}
+
+/* Sentiment Display */
+.sentiment-display {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.sentiment-very_positive {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.sentiment-positive {
+    background-color: #d1ecf1;
+    color: #0c5460;
+    border: 1px solid #bee5eb;
+}
+
+.sentiment-neutral {
+    background-color: #f8f9fa;
+    color: #495057;
+    border: 1px solid #dee2e6;
+}
+
+.sentiment-negative {
+    background-color: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
+}
+
+.sentiment-very_negative {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+/* Sentiment Indicator */
+.sentiment-indicator {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-left: 0.5rem;
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 1px #ddd;
+}
+
+.sentiment-indicator.very_positive {
+    background-color: #28a745;
+}
+
+.sentiment-indicator.positive {
+    background-color: #17a2b8;
+}
+
+.sentiment-indicator.neutral {
+    background-color: #6c757d;
+}
+
+.sentiment-indicator.negative {
+    background-color: #ffc107;
+}
+
+.sentiment-indicator.very_negative {
+    background-color: #dc3545;
+}
+
+/* Topics Section */
+.topics-section {
+    margin-bottom: 1rem;
+}
+
+.topics-section h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 0.9rem;
+    color: #666;
+    font-weight: 500;
+}
+
+.topics-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+}
+
+.topic-chip {
+    background-color: #e9ecef;
+    color: #495057;
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    border: 1px solid #dee2e6;
+}
+
+.no-topics {
+    color: #999;
+    font-style: italic;
+    font-size: 0.85rem;
+}
+
+/* Sentiment Alerts */
+.sentiment-alerts {
+    margin-top: 1rem;
+}
+
+.sentiment-alert {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    margin-bottom: 0.5rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    animation: slideIn 0.3s ease-out;
+}
+
+.sentiment-alert.high-priority {
+    border-left: 4px solid #dc3545;
+    background: #fff5f5;
+}
+
+.alert-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    background: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+    border-radius: 6px 6px 0 0;
+}
+
+.alert-header i {
+    color: #dc3545;
+    margin-right: 0.5rem;
+}
+
+.alert-header span {
+    font-weight: 600;
+    color: #333;
+}
+
+.alert-close {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    color: #999;
+    cursor: pointer;
+    padding: 0;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.alert-close:hover {
+    color: #333;
+}
+
+.alert-content {
+    padding: 0.75rem;
+}
+
+.alert-content p {
+    margin: 0 0 0.75rem 0;
+    color: #333;
+}
+
+.alert-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* Interaction History */
+.interaction-container {
+    max-height: 300px;
+    overflow-y: auto;
+    padding: 0.5rem 0;
+}
+
+.history-item {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.history-item:hover {
+    background: #e9ecef;
+    border-color: #adb5bd;
+}
+
+.history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.history-time {
+    font-size: 0.75rem;
+    color: #666;
+    font-family: 'Fira Code', monospace;
+}
+
+.history-sentiment {
+    padding: 0.2rem 0.4rem;
+    border-radius: 3px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.history-transcript {
+    font-style: italic;
+    color: #333;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.history-topics {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+}
+
+.topic-tag {
+    background: #e3f2fd;
+    color: #1976d2;
+    padding: 0.2rem 0.4rem;
+    border-radius: 8px;
+    font-size: 0.7rem;
+    font-weight: 500;
+    border: 1px solid #bbdefb;
+}
+
+.no-interactions {
+    text-align: center;
+    color: #999;
+    font-style: italic;
+    padding: 2rem;
+}
+
+/* Connection Status */
+.status-connected {
+    color: #28a745;
+    font-weight: 600;
+}
+
+.status-disconnected {
+    color: #dc3545;
+    font-weight: 600;
+}
+
+/* Notifications */
+.notification-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 10000;
+    max-width: 400px;
+}
+
+.notification {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    margin-bottom: 0.5rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    animation: slideInRight 0.3s ease-out;
+}
+
+.notification.urgent {
+    border-left: 4px solid #dc3545;
+    background: #fff5f5;
+}
+
+.notification.success {
+    border-left: 4px solid #28a745;
+    background: #f8fff8;
+}
+
+.notification.error {
+    border-left: 4px solid #dc3545;
+    background: #fff5f5;
+}
+
+.notification.warning {
+    border-left: 4px solid #ffc107;
+    background: #fffbf0;
+}
+
+.notification.info {
+    border-left: 4px solid #17a2b8;
+    background: #f0f9ff;
+}
+
+.notification-content {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem;
+}
+
+.notification-content i {
+    margin-right: 0.5rem;
+    font-size: 1.1rem;
+}
+
+.notification.success i {
+    color: #28a745;
+}
+
+.notification.error i {
+    color: #dc3545;
+}
+
+.notification.warning i {
+    color: #ffc107;
+}
+
+.notification.info i {
+    color: #17a2b8;
+}
+
+.notification-content span {
+    flex: 1;
+    color: #333;
+    font-weight: 500;
+}
+
+.notification-close {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    color: #999;
+    cursor: pointer;
+    padding: 0;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 0.5rem;
+}
+
+.notification-close:hover {
+    color: #333;
+}
+
+/* Animations */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .panel-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .alert-actions {
+        flex-direction: column;
+    }
+    
+    .notification-container {
+        left: 10px;
+        right: 10px;
+        max-width: none;
+    }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+    .sentiment-panel {
+        background: #2d3748;
+        color: #e2e8f0;
+    }
+    
+    .sentiment-display {
+        background-color: #4a5568;
+        color: #e2e8f0;
+    }
+    
+    .topic-chip {
+        background-color: #4a5568;
+        color: #e2e8f0;
+        border-color: #718096;
+    }
+    
+    .history-item {
+        background: #4a5568;
+        border-color: #718096;
+        color: #e2e8f0;
+    }
+    
+    .notification {
+        background: #2d3748;
+        border-color: #4a5568;
+        color: #e2e8f0;
+    }
+}

@@ -514,6 +514,18 @@ async function processVADAudio() {
       
       console.log("🔄 Processing command, audio input remains blocked");
       
+      // Analyze sentiment and topics with Genesys
+      if (window.sentimentAnalyzer) {
+        try {
+          const sentimentAnalysis = await window.sentimentAnalyzer.analyzeTranscript(transcript.trim());
+          if (sentimentAnalysis) {
+            console.log("🧠 Sentiment Analysis:", sentimentAnalysis);
+          }
+        } catch (error) {
+          console.warn("⚠️ Sentiment analysis failed:", error);
+        }
+      }
+      
       if (awaitingConfirmation) {
         console.log("⏳ Checking confirmation for:", transcript);
         await handleConfirmation(transcript.trim());
