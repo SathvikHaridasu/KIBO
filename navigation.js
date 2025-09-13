@@ -1227,3 +1227,64 @@ function animateBetweenPoints(startIndex, endIndex, durationMs) {
     
     // Update Kibo's position
     simulatedRoverPosition = currentPos;
+    
+    if (window.roverMarker) {
+      window.roverMarker.setPosition(currentPos);
+      window.roverMarker.setIcon({
+        path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+        scale: 8,
+        fillColor: "#00FF00",
+        fillOpacity: 1,
+        strokeWeight: 3,
+        strokeColor: "#000000",
+        rotation: bearing
+      });
+    }
+    
+    // Keep map centered on Kibo
+    if (typeof map !== 'undefined') {
+      map.panTo(currentPos);
+    }
+    
+    // Update progress
+    routeProgress = endIndex / (routeCoordinates.length - 1);
+    
+    // Animation complete
+    if (progress >= 1) {
+      clearInterval(animationInterval);
+      currentRouteIndex = endIndex;
+      
+      console.log(`✅ Animation complete - now at point ${endIndex} (${Math.round(routeProgress * 100)}%)`);
+      
+      // Update summary with progress
+      if (typeof addToSummary === 'function') {
+        addToSummary(`📍 Progress: ${Math.round(routeProgress * 100)}% of route completed`);
+      }
+    }
+  }, 50); // 20 FPS animation
+}
+
+// Calculate total route distance
+function calculateTotalRouteDistance() {
+  let total = 0;
+  for (let i = 1; i < routeCoordinates.length; i++) {
+    total += calculateDistance(
+      routeCoordinates[i-1].lat, routeCoordinates[i-1].lng,
+      routeCoordinates[i].lat, routeCoordinates[i].lng
+    );
+  }
+  return total * 1000; // Convert to meters
+}
+
+// Calculate bearing between two points
+function calculateBearing(start, end) {
+  const dLng = (end.lng - start.lng) * Math.PI / 180;
+  const lat1 = start.lat * Math.PI / 180;
+  const lat2 = end.lat * Math.PI / 180;
+  
+  const y = Math.sin(dLng) * Math.cos(lat2);
+  const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLng);
+  
+  const bearing = Math.atan2(y, x) * 180 / Math.PI;
+  return (bearing + 360) % 360;
+}
