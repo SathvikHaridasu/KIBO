@@ -874,3 +874,398 @@ input:focus,
   position: relative;
   overflow: hidden;
 }
+
+.camera-placeholder {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.camera-placeholder i {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+  display: block;
+  opacity: 0.5;
+}
+
+/* Collapsible Sections */
+.collapsible {
+  cursor: pointer;
+}
+
+.collapsible h3:after {
+  content: '▼';
+  font-size: 0.7rem;
+  margin-left: auto;
+  opacity: 0.5;
+  transition: transform 0.2s ease;
+}
+
+.collapsible.active h3:after {
+  transform: rotate(180deg);
+}
+
+/* Scrollbar */
+.sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+}
+
+.panel:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.12);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.camera-panel {
+  margin-top: var(--spacing-sm);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--bg-secondary);
+  min-height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: var(--transition-fast);
+}
+
+.camera-panel.active {
+  border-color: var(--secondary);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+.camera-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-sm);
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+.camera-placeholder i {
+  font-size: 2rem;
+  opacity: 0.5;
+}
+
+.camera-feed {
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+  max-height: 200px;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+}
+
+.camera-controls {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-sm);
+}
+
+.camera-controls .btn {
+  flex: 1;
+  padding: var(--spacing-sm) var(--spacing-md);
+  font-size: 0.75rem;
+  min-height: 36px;
+}
+
+.btn-success {
+  background: var(--secondary);
+  border-color: var(--secondary);
+  color: white;
+}
+
+.btn-success:hover {
+  background: #059669;
+  border-color: #059669;
+}
+
+.btn-danger {
+  background: var(--error);
+  border-color: var(--error);
+  color: white;
+}
+
+.btn-danger:hover {
+  background: #dc2626;
+  border-color: #dc2626;
+}
+
+/* ===== Desktop off-canvas when navigation is active ===== */
+/* When navigation starts, collapse the layout to a single column and hide the sidebar off-canvas. */
+body.nav-active .layout {
+  grid-template-columns: 1fr;
+}
+
+body.nav-active .sidebar {
+  position: fixed;
+  top: 0;
+  left: -340px; /* hidden off left edge */
+  width: 320px;
+  height: 100vh;
+  z-index: 1000;
+  border-radius: 0;
+  max-height: 100vh;
+  display: block; /* ensure it can slide in */
+  transition: left 0.3s ease;
+}
+
+body.nav-active .sidebar.active,
+body.nav-active .sidebar.open {
+  left: 0; /* slide in */
+}
+
+/* Make sure the map remains visible under the overlaid sidebar */
+body.nav-active .map-wrap {
+  border-radius: var(--radius-xl);
+}
+
+.status-display {
+  background: var(--bg-tertiary);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-md);
+  margin: var(--spacing-sm) 0;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.75rem;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+}
+
+.vad-controls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.vad-controls label {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.vad-controls input[type="range"] {
+  width: 100%;
+  height: 4px;
+  background: var(--bg-secondary);
+  border-radius: 2px;
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.vad-controls input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: var(--primary);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.vad-controls input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: var(--primary);
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+}
+
+/* Mobile camera adjustments */
+@media (max-width: 768px) {
+  .camera-panel {
+    min-height: 100px;
+  }
+  
+  .camera-feed {
+    max-height: 150px;
+  }
+  
+  .camera-controls {
+    flex-direction: column;
+  }
+  
+  .camera-placeholder i {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .camera-panel {
+    min-height: 80px;
+  }
+  
+  .camera-feed {
+    max-height: 120px;
+  }
+}
+
+/* ===== Enhanced UI Additions ===== */
+/* Glassmorphism cards */
+.sidebar, .panel {
+  background: rgba(30, 41, 59, 0.6);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+/* Map search bar style */
+input[type='text'] {
+  border-radius: 9999px;
+  padding: 0.75rem 1.25rem;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+input[type='text']::placeholder {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+input[type='text']:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.5);
+}
+
+/* Floating Action Buttons */
+.floating-btn {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  box-shadow: var(--shadow-xl);
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.floating-btn:hover {
+  transform: scale(1.1);
+  background: var(--primary-hover);
+}
+
+/* Smaller secondary floating buttons */
+.fab-sm {
+  width: 44px;
+  height: 44px;
+  font-size: 1rem;
+  background: var(--bg-card);
+  color: var(--text-primary);
+}
+
+/* Floating chips (traffic/transit/bike) */
+.map-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+  background: rgba(30,41,59,0.6);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.1);
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.map-chip:hover {
+  background: rgba(59,130,246,0.2);
+  transform: translateY(-2px);
+}
+
+/* Sidebar Assistant (mobile off-canvas) */
+@media (max-width: 1024px) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: -320px; /* hidden by default */
+    width: 300px;
+    height: 100%;
+    background: rgba(30, 41, 59, 0.6);
+    backdrop-filter: blur(20px);
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.3);
+    transition: left 0.3s ease;
+    padding: 1rem;
+    z-index: 1000;
+    display: block;
+  }
+  .sidebar.open,
+  .sidebar.active { /* support both class names */
+    left: 0;
+  }
+  .sidebar-content input {
+    width: 100%;
+    margin-bottom: 0.75rem;
+  }
+}
+
+/* Floating Chips positioning */
+.map-chips {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 0.5rem;
+  z-index: 20;
+}
+
+.map-chip.active {
+  background: var(--primary);
+  color: white;
+  box-shadow: 0 0 12px rgba(59,130,246,0.5);
+}
+
+/* Floating Action Buttons container */
+.fab-container {
+  position: absolute;
+  bottom: 24px;
+  right: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  z-index: 900;
+}
+
+/* Left-edge hotspot to reveal sidebar */
+#leftEdgeHotspot {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 10px; /* edge width to trigger */
+  height: 100vh;
+  z-index: 1100; /* above map, below sidebar header z if needed */
+  background: transparent;
+  cursor: ew-resize;
+}
