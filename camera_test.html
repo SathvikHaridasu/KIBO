@@ -1,13 +1,129 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>Camera Test</title>
-  <script src="camera.js"></script>
+    <title>Camera Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #222; color: white; }
+        .camera-feed { max-width: 640px; border: 2px solid #00ff00; }
+        button { padding: 10px 20px; margin: 10px; font-size: 16px; }
+        .status { background: #333; padding: 10px; margin: 10px 0; border-radius: 5px; }
+    </style>
 </head>
 <body>
-  <h1>Camera Test</h1>
-  <button onclick="startCamera()">Start Camera</button>
-  <button onclick="stopCamera()">Stop Camera</button>
+    <h1>🎥 Kibo Camera Test</h1>
+    
+    <div class="status" id="status">Status: Disconnected</div>
+    
+    <button onclick="startCamera()">Start Camera</button>
+    <button onclick="stopCamera()">Stop Camera</button>
+    <button onclick="checkStatus()">Check Status</button>
+    
+    <br><br>
+    
+    <img id="cameraFeed" class="camera-feed" style="display: none;" alt="Camera Feed">
+    
+    <div id="log" style="background: #111; padding: 10px; margin: 20px 0; font-family: monospace; font-size: 12px; height: 200px; overflow-y: scroll;"></div>
+
+    <script>
+        const PI_IP = "10.0.0.22";
+        const CAMERA_PORT = 5002;
+        
+        function log(message) {
+            const logDiv = document.getElementById('log');
+            const time = new Date().toLocaleTimeString();
+            logDiv.innerHTML += `[${time}] ${message}<br>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(message);
+        }
+        
+        function updateStatus(message) {
+            document.getElementById('status').textContent = `Status: ${message}`;
+            log(`Status: ${message}`);
+        }
+        
+        async function checkStatus() {
+            try {
+                log(`Checking camera status at http://${PI_IP}:${CAMERA_PORT}/camera/status`);
+                const response = await fetch(`http://${PI_IP}:${CAMERA_PORT}/camera/status`);
+                const data = await response.json();
+                updateStatus(`Server OK - Streaming: ${data.streaming}`);
+                log(`Response: ${JSON.stringify(data)}`);
+                return data.streaming;
+            } catch (error) {
+                updateStatus(`Error: ${error.message}`);
+                log(`Status check failed: ${error}`);
+                return false;
+            }
+        }
+        
+        async function startCamera() {
+            try {
+                log(`Starting camera...`);
+                updateStatus("Starting camera...");
+                
+                // Start camera on Pi
+                const startResponse = await fetch(`http://${PI_IP}:${CAMERA_PORT}/camera/start`, {
+                    method: 'POST'
+                });
+                
+                if (!startResponse.ok) {
+                    throw new Error(`Start failed: ${startResponse.status}`);
+                }
+                
+                const startData = await startResponse.json();
+                log(`Start response: ${JSON.stringify(startData)}`);
+                
+                // Set up video stream
+                const cameraFeed = document.getElementById('cameraFeed');
+                const streamUrl = `http://${PI_IP}:${CAMERA_PORT}/camera/stream?t=${Date.now()}`;
+                
+                log(`Setting camera source to: ${streamUrl}`);
+                cameraFeed.src = streamUrl;
+                cameraFeed.style.display = "block";
+                
+                cameraFeed.onload = () => {
+                    log("✅ Camera feed loaded successfully!");
+                    updateStatus("Camera active");
+                };
+                
+                cameraFeed.onerror = (e) => {
+                    log("❌ Camera feed failed to load");
+                    updateStatus("Camera feed error");
+                };
+                
+            } catch (error) {
+                log(`❌ Start camera error: ${error}`);
+                updateStatus(`Start failed: ${error.message}`);
+            }
+        }
+        
+        async function stopCamera() {
+            try {
+                log(`Stopping camera...`);
+                updateStatus("Stopping camera...");
+                
+                const stopResponse = await fetch(`http://${PI_IP}:${CAMERA_PORT}/camera/stop`, {
+                    method: 'POST'
+                });
+                
+                const cameraFeed = document.getElementById('cameraFeed');
+                cameraFeed.src = "";
+                cameraFeed.style.display = "none";
+                
+                updateStatus("Camera stopped");
+                log("✅ Camera stopped");
+                
+            } catch (error) {
+                log(`❌ Stop camera error: ${error}`);
+                updateStatus(`Stop failed: ${error.message}`);
+            }
+        }
+        
+        // Auto-check status on load
+        window.onload = () => {
+            log("🎥 Camera test page loaded");
+            checkStatus();
+        };
+    </script>
 </body>
 </html>
