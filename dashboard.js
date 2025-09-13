@@ -209,4 +209,141 @@ class RoverDashboard {
             this.updateConnectionStatus('disconnected', 'Robot Offline');
             this.showLoadingScreen('Robot is offline. Check connection.');
         }
-    
+    }
+
+    startStatusUpdates() {
+        // Update every 2 seconds (perfect for dashboard!)
+        this.updateInterval = setInterval(() => {
+            this.updateRobotData();
+        }, 2000);
+        
+        // Initial update
+        this.updateRobotData();
+        console.log('📊 Status updates started (every 2 seconds)');
+    }
+
+    async updateRobotData() {
+        try {
+            // Existing code stays the same...
+            const response = await fetch(`http://${this.PI_IP}:5005/robot/navigation_data`);
+            
+            if (!response.ok) throw new Error('Navigation data unavailable');
+            
+            const data = await response.json();
+            
+            // Existing updates...
+            this.updateDashboardElements({
+                battery: 85,
+                mode: "AUTONOMOUS",
+                speed: "2.1 m/s",
+                direction: data.action || "STOPPED",
+                fps: "52",
+                temperature: "42°C",
+                obstacles: data.summary?.obstacle_count || 0,
+                crosswalks: data.summary?.crosswalk_count || 0, 
+                vehicles: data.summary?.vehicle_count || 0,
+                action: data.action || "UNKNOWN"
+            });
+            
+            // NEW: Update detection stats
+            this.updateDetectionStats(data.summary);
+            
+            // Existing connection status code...
+            if (!this.isConnected) {
+                this.isConnected = true;
+                this.updateConnectionStatus('connected', 'Robot Online');
+                this.showDashboard();
+            }
+            
+        } catch (error) {
+            console.error('📊 Status update failed:', error);
+            if (this.isConnected) {
+                this.isConnected = false;
+                this.updateConnectionStatus('disconnected', 'Robot Offline');
+            }
+        }
+    }
+
+    updateDashboardElements(data) {
+        // Update each status element if it exists
+        Object.entries(data).forEach(([key, value]) => {
+            const element = this.statusElements[key];
+            if (element) {
+                element.textContent = value;
+            }
+        });
+    }
+
+    async sendCommand(command, duration = 1.0) {
+        if (!this.isConnected) {
+            console.error('❌ Cannot send command: Robot offline');
+            return;
+        }
+
+        try {
+            console.log(`🎮 Sending command: ${command}`);
+            
+            const response = await fetch(`http://${this.PI_IP}:5001/robot/command`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: command,
+                    duration: duration
+                })
+            });
+
+            const result = await response.json();
+            console.log(`✅ Command result:`, result);
+            
+        } catch (error) {
+            console.error(`❌ Command failed:`, error);
+        }
+    }
+
+    updateConnectionStatus(status, message) {
+        if (this.connectionStatus) {
+            this.connectionStatus.className = `status-${status}`;
+        }
+        if (this.connectionStatusText) {
+            this.connectionStatusText.textContent = message;
+        }
+    }
+
+    showLoadingScreen(message) {
+        if (this.loadingScreen) this.loadingScreen.style.display = 'flex';
+        if (this.dashboardContent) this.dashboardContent.style.display = 'none';
+        const loadingMessage = document.getElementById('loading-message');
+        if (loadingMessage) loadingMessage.textContent = message;
+    }
+
+    showDashboard() {
+        if (this.loadingScreen) this.loadingScreen.style.display = 'none';
+        if (this.dashboardContent) this.dashboardContent.style.display = 'grid';
+    }
+
+    setupEventListeners() {
+        // Manual control buttons
+        document.querySelectorAll('.control-btn').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const command = e.target.dataset.command;
+                if (command) {
+                    this.sendCommand(command);
+                }
+            });
+        });
+
+        // Emergency stop button (special handling)
+        const emergencyBtn = document.getElementById('emergency-stop');
+        if (emergencyBtn) {
+            emergencyBtn.addEventListener('click', () => {
+                this.sendCommand('stop', 0); // Immediate stop
+            });
+        }
+    }
+}
+
+// Initialize dashboard
+document.addEventListener('DOMContentLoaded', () => {
+    const dashboard = new RoverDashboard();
+    window.roverDashboard = dashboard; // For debugging
+});
