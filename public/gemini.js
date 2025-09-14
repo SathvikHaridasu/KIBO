@@ -1,6 +1,6 @@
 // gemini.js - enhanced for conversational intelligence
 window.GEMINI_CONFIG = {
-  apiKey: "AIzaSyBUZtba4U80SiS9BbGUDTqP8Um4L4Oemgk",
+  apiKey: null, // API key will be loaded from backend config
   model: "models/gemini-1.5",
   endpointBase: "https://generativelanguage.googleapis.com/v1beta2"
 };
