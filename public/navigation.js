@@ -12,8 +12,7 @@ let simulatedRoverPosition = null; // Rover's simulated GPS position
 let simulatedMovementScale = 10000; // 1km = 10cm (scale factor)
 let roverStartPosition = null;
 let roverBearing = 0; // Rover's current direction in degrees
-// ===== OBSTACLE AVOIDANCE VARIABLES =====
-let obstacleAvoidanceActive = false;
+// ===== OBSTACLE AVOIDANCE VARIABLES =====/
 let originalNavigationStep = null;
 let detourInProgress = false;
 let lastObstacleCheck = 0;

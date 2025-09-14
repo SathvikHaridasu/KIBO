@@ -38,6 +38,11 @@ app.get('/api/config', (req, res) => {
     googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY || null,
     geminiApiKey: process.env.GEMINI_API_KEY || null,
     googleSttApiKey: process.env.GOOGLE_STT_API_KEY || null,
+    vapiPublicApiKey: process.env.VAPI_PUBLIC_API_KEY || null,
+    vapiAssistantId: process.env.VAPI_ASSISTANT_ID || null,
+    // ✅ ADD THESE RESEMBLE.AI FIELDS:
+    resembleApiKey: process.env.RESEMBLE_API_KEY || null,
+    resembleVoiceUuid: process.env.RESEMBLE_VOICE_UUID || null,
   });
 });
 
@@ -246,85 +251,179 @@ app.listen(PORT, () => {
   console.log("   - Gemini API (AI Studio)");
 });
 
-// ===== VAPI INTEGRATION =====
-
-
-// VAPI Text-to-Speech endpoint
-app.post('/api/vapi/speak', async (req, res) => {
+// ===== RESEMBLE.AI WALL-E TTS ENDPOINT =====
+// ===== ALTERNATIVE WALL-E TTS ENDPOINT =====
+app.post('/api/resemble-tts', async (req, res) => {
   try {
-    const { text, voice = 'jennifer', speed = 1.0 } = req.body;
+    const { text } = req.body;
     
-    if (!text || text.trim().length === 0) {
-      return res.status(400).json({ error: 'Text is required' });
+    if (!text) {
+      return res.status(400).json({ error: "No text provided" });
     }
-
-    console.log('🗣️ VAPI TTS Request:', text.substring(0, 50) + '...');
-
-    const vapiResponse = await fetch('https://api.vapi.ai/call/web/voice/speak', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${VAPI_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        message: text,
-        voice: voice,
-        speed: speed,
-        format: 'mp3' // or 'wav'
-      })
-    });
-
-    if (!vapiResponse.ok) {
-      const errorText = await vapiResponse.text();
-      console.error('❌ VAPI Error:', vapiResponse.status, errorText);
-      throw new Error(`VAPI request failed: ${vapiResponse.status}`);
-    }
-
-    // Get audio buffer from VAPI
-    const audioBuffer = await vapiResponse.arrayBuffer();
     
-    // Convert to base64 for frontend
-    const base64Audio = Buffer.from(audioBuffer).toString('base64');
-
-    res.json({
-      success: true,
-      audio: base64Audio,
-      format: 'mp3',
-      text: text
+    if (!process.env.RESEMBLE_API_KEY || !process.env.RESEMBLE_VOICE_UUID) {
+      return res.status(200).json({
+        success: false,
+        fallback: true,
+        message: "Resemble.ai not configured"
+      });
+    }
+    
+    console.log("🤖 Wall-E TTS request:", text.substring(0, 50) + "...");
+    
+    // ✅ TRY METHOD 1: Direct synthesis endpoint
+    try {
+      const response1 = await fetch('https://app.resemble.ai/api/v2/clips', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.RESEMBLE_API_KEY}`
+        },
+        body: JSON.stringify({
+          voice_uuid: process.env.RESEMBLE_VOICE_UUID,
+          body: text,
+          title: "Wall-E"
+        })
+      });
+      
+      if (response1.ok) {
+        const data1 = await response1.json();
+        console.log("✅ Method 1 success");
+        return res.json({
+          success: true,
+          audio_url: data1.audio_src,
+          method: "resemble_method_1"
+        });
+      }
+    } catch (e1) {
+      console.log("Method 1 failed:", e1.message);
+    }
+    
+    // ✅ TRY METHOD 2: Different endpoint format
+    try {
+      const response2 = await fetch('https://app.resemble.ai/api/v2/projects/clips/create_sync', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Token ${process.env.RESEMBLE_API_KEY}`
+        },
+        body: JSON.stringify({
+          voice_uuid: process.env.RESEMBLE_VOICE_UUID,
+          body: text
+        })
+      });
+      
+      if (response2.ok) {
+        const data2 = await response2.json();
+        console.log("✅ Method 2 success");
+        return res.json({
+          success: true,
+          audio_url: data2.audio_src,
+          method: "resemble_method_2"
+        });
+      }
+    } catch (e2) {
+      console.log("Method 2 failed:", e2.message);
+    }
+    
+    // ✅ ALL METHODS FAILED - Use browser TTS
+    console.log("🔄 All Resemble.ai methods failed, using browser TTS");
+    return res.json({
+      success: false,
+      fallback: true,
+      message: "Resemble.ai unavailable, using browser TTS"
     });
-
+    
   } catch (error) {
-    console.error('❌ VAPI TTS Error:', error);
-    res.status(500).json({ 
-      error: 'VAPI text-to-speech failed',
-      fallback: true // Tell frontend to use browser TTS
+    console.error("❌ Resemble TTS error:", error);
+    res.json({
+      success: false,
+      fallback: true,
+      message: "Using browser TTS fallback"
     });
   }
 });
 
-// Health check for VAPI
-app.get('/api/vapi/health', async (req, res) => {
+// Wall-E TTS endpoint using Resemble.ai
+app.post('/api/resemble-tts', async (req, res) => {
   try {
-    const testResponse = await fetch('https://api.vapi.ai/call/web/voice/speak', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${VAPI_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        message: 'Test',
-        voice: 'jennifer'
-      })
-    });
-
+    const { text } = req.body;
+    
+    if (!text) {
+      return res.status(400).json({ error: "No text provided" });
+    }
+    
+    if (!process.env.RESEMBLE_API_KEY || !process.env.RESEMBLE_VOICE_UUID) {
+      // ✅ Silent fallback - no console spam
+      return res.status(200).json({
+        success: false,
+        fallback: true,
+        message: "Using browser TTS"
+      });
+    }
+    
+    // ✅ Try Resemble.ai silently
+    try {
+      const response = await fetch('https://f.cluster.resemble.ai/synthesize', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.RESEMBLE_API_KEY}`,
+          'Content-Type': 'application/json',
+          'Accept-Encoding': 'gzip, deflate, br'
+        },
+        body: JSON.stringify({
+          voice_uuid: process.env.RESEMBLE_VOICE_UUID,
+          data: text,
+          sample_rate: 22050,
+          output_format: "mp3"
+        })
+      });
+      
+      if (response.ok) {
+        const audioData = await response.json();
+        
+        if (audioData.success && audioData.audio_content) {
+          // ✅ Success - return Resemble.ai audio
+          return res.json({
+            success: true,
+            audio_content: audioData.audio_content,
+            output_format: audioData.output_format || "mp3",
+            duration: audioData.duration,
+            method: "resemble_wall_e"
+          });
+        }
+      }
+    } catch (resembleError) {
+      // ✅ Silent fail - don't log errors
+    }
+    
+    // ✅ Silent fallback to browser TTS
     res.json({
-      vapiAvailable: testResponse.ok,
-      status: testResponse.status
+      success: false,
+      fallback: true,
+      message: "Using browser TTS"
     });
+    
   } catch (error) {
+    // ✅ Silent fallback on any error
     res.json({
-      vapiAvailable: false,
-      error: error.message
+      success: false,
+      fallback: true,
+      message: "Using browser TTS"
     });
   }
+});
+
+// Update your config endpoint to include Resemble keys
+app.get('/api/config', (req, res) => {
+  res.json({
+    googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY || null,
+    geminiApiKey: process.env.GEMINI_API_KEY || null,
+    googleSttApiKey: process.env.GOOGLE_STT_API_KEY || null,
+    vapiPublicApiKey: process.env.VAPI_PUBLIC_API_KEY || null,
+    vapiAssistantId: process.env.VAPI_ASSISTANT_ID || null,
+    // ✅ NEW: Add Resemble config
+    resembleApiKey: process.env.RESEMBLE_API_KEY || null,
+    resembleVoiceUuid: process.env.RESEMBLE_VOICE_UUID || null,
+  });
 });

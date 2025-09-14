@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Kibo — Voice Maps (Gemini)</title>
+  <title>Wall-E — Voice Navigation Robot</title>
   <link rel="stylesheet" href="styles.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -25,13 +25,13 @@
   </div>
 
   <header class="topbar" role="banner">
-    <div class="brand" aria-label="Kibo Voice Maps">
+    <div class="brand" aria-label="Wall-E Voice Navigation Robot">
       <div class="brand-icon">
-        <img src="robo.png" alt="Kibo Logo" style="width: 78px; height: 78px;">
+        <img src="robo.png" alt="Wall-E Logo" style="width: 78px; height: 78px;">
       </div>
       <div class="brand-text">
-        <h1>Kibo</h1>
-        <p class="subtitle">Voice-first maps • Gemini-powered</p>
+        <h1>Wall-E</h1>
+        <p class="subtitle">Voice navigation robot • AI-powered exploration</p>
       </div>
     </div>
 
@@ -43,7 +43,7 @@
         <i class="fas fa-camera"></i>
         <span>Camera: inactive</span>
       </div>
-      <button id="toggleVoiceBtn" class="btn primary" aria-pressed="false" aria-label="Enable Kibo voice">
+      <button id="toggleVoiceBtn" class="btn primary" aria-pressed="false" aria-label="Enable Wall-E voice">
         <i class="fas fa-microphone"></i>
         <span class="btn-text">Enable Voice</span>
       </button>
@@ -72,7 +72,7 @@
   <main id="main" class="layout" role="main">
     <aside class="sidebar" id="sidebar">
       <header class="sidebar-header">
-        <h2>Robot Control Panel</h2>
+        <h2>Wall-E Control Panel</h2>
         <button class="close-sidebar" id="closeSidebar" aria-label="Close sidebar">
           <i class="fas fa-times"></i>
         </button>
@@ -80,9 +80,9 @@
 
       <!-- Directions -->
       <section class="sidebar-section">
-        <h3><i class="fas fa-route"></i> Directions</h3>
-        <input type="text" id="origin" placeholder="Origin" class="sidebar-input" />
-        <input type="text" id="destination" placeholder="Destination" class="sidebar-input" />
+        <h3><i class="fas fa-route"></i> Navigation</h3>
+        <input type="text" id="origin" placeholder="Starting location" class="sidebar-input" />
+        <input type="text" id="destination" placeholder="Where should Wall-E go?" class="sidebar-input" />
         <button id="addWaypointBtn" class="btn btn-ghost add-waypoint">
           <i class="fas fa-plus"></i> Add Waypoint
         </button>
@@ -94,7 +94,7 @@
         </div>
         <div class="actions">
           <button id="routeBtn" class="btn primary">
-            <i class="fas fa-directions"></i> Get Directions
+            <i class="fas fa-directions"></i> Plan Route
           </button>
           <button id="clearBtn" class="btn btn-ghost">
             <i class="fas fa-trash"></i> Clear
@@ -104,7 +104,7 @@
 
       <!-- Map Layers -->
       <section class="sidebar-section collapsible">
-        <h3><i class="fas fa-layer-group"></i> Layers</h3>
+        <h3><i class="fas fa-layer-group"></i> Map Layers</h3>
         <div class="chips">
           <span class="chip" data-layer="traffic">Traffic</span>
           <span class="chip" data-layer="transit">Transit</span>
@@ -114,53 +114,55 @@
 
       <!-- Voice -->
       <section class="sidebar-section collapsible">
-        <h3><i class="fas fa-microphone"></i> Voice</h3>
+        <h3><i class="fas fa-microphone"></i> Wall-E Voice</h3>
         
         <!-- Assistant Output Display -->
         <div id="assistantOutput" class="assistant-output" style="padding: 10px; background: #f0f0f0; border-radius: 5px; margin: 10px 0; min-height: 40px; font-weight: 500; color: #333;">
-          🤖 Assistant ready...
+          🤖 Wall-E ready for commands...
         </div>
         
         <!-- Voice Transcript Display -->
         <div id="transcript" class="transcript" style="padding: 8px; background: #e8f4f8; border-radius: 3px; margin: 5px 0; font-style: italic; min-height: 30px; font-size: 0.9em; color: #666;">
-          🎤 Voice commands will appear here...
+          🎤 Wall-E is listening...
         </div>
         
-        <p class="hint">Say things like:</p>
+        <p class="hint">Tell Wall-E things like:</p>
         <ul class="quick-commands">
-          <li>"Find nearest McDonald's"</li>
+          <li>"Find nearest gas station"</li>
+          <li>"Go to the grocery store"</li>
           <li>"Show traffic"</li>
           <li>"Stop moving"</li>
+          <li>"Wall-E, where are we?"</li>
         </ul>
         <button id="toggleVoiceBtn" class="btn voice-btn">
-          <i class="fas fa-microphone"></i> Start Listening
+          <i class="fas fa-microphone"></i> Talk to Wall-E
         </button>
       </section>
 
       <!-- Camera -->
       <section class="sidebar-section collapsible">
-        <h3><i class="fas fa-camera"></i> Camera</h3>
+        <h3><i class="fas fa-camera"></i> Wall-E Vision</h3>
         <div id="cameraPanel" class="camera-box">
           <div class="camera-placeholder">
             <i class="fas fa-camera"></i>
-            <p>Camera feed will appear here</p>
+            <p>Wall-E's camera feed will appear here</p>
           </div>
-          <img id="cameraFeed" class="camera-feed" style="display: none;" alt="Live Camera Feed" />
+          <img id="cameraFeed" class="camera-feed" style="display: none;" alt="Wall-E Camera Feed" />
         </div>
         <div class="camera-controls">
           <button id="startCameraBtn" class="btn btn-ghost sm">
-            <i class="fas fa-play"></i> Start Feed
+            <i class="fas fa-play"></i> Start Vision
           </button>
           <button id="stopCameraBtn" class="btn btn-ghost sm" style="display: none;">
-            <i class="fas fa-stop"></i> Stop Feed
+            <i class="fas fa-stop"></i> Stop Vision
           </button>
         </div>
       </section>
 
       <!-- Markers -->
       <section class="sidebar-section collapsible">
-        <h3><i class="fas fa-map-marker-alt"></i> Markers</h3>
-        <p>Click map to drop a marker</p>
+        <h3><i class="fas fa-map-marker-alt"></i> Waypoints</h3>
+        <p>Click map to mark interesting locations</p>
         <button id="clearMarkersBtn" class="btn btn-ghost">
           <i class="fas fa-eraser"></i> Clear Markers
         </button>
@@ -168,7 +170,7 @@
 
       <!-- Trip -->
       <section class="sidebar-section collapsible">
-        <h3><i class="fas fa-route"></i> Trip</h3>
+        <h3><i class="fas fa-route"></i> Current Mission</h3>
         <div id="summary" class="summary"></div>
       </section>
 
@@ -182,22 +184,22 @@
       <div id="map"></div>
 
       <div class="map-overlay">
-        <button class="floating-btn" id="sidebarToggle" aria-label="Open navigation panel">
+        <button class="floating-btn" id="sidebarToggle" aria-label="Open Wall-E control panel">
           <i class="fas fa-bars"></i>
         </button>
       </div>
     </section>
   </main>
 
-
   <script src="robot.js"></script>
   <!-- Robot Control Section -->
   <div class="robot-controls">
     <div class="status-display">
-      <div id="robotStatus" class="status-indicator">Robot: Initializing...</div>
-      <div id="cameraStatus" class="status-indicator">Camera: Initializing...</div>
+      <div id="robotStatus" class="status-indicator">Wall-E: Initializing...</div>
+      <div id="cameraStatus" class="status-indicator">Vision: Initializing...</div>
       <div id="detectionStatus" class="status-indicator">Detection: Initializing...</div>
     </div>
+  </div>
   
   <script src="gemini.js"></script>
   <script src="map.js"></script>
@@ -205,6 +207,7 @@
   <script src="camera.js"></script>
   <script src="detection_client.js"></script>
   <script src="sidebar.js"></script>
+  <script src="wall-e-voice.js"></script>
   <script src="voice.js"></script>
   <script src="app.js"></script>
   

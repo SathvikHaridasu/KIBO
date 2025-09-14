@@ -741,50 +741,34 @@ async function initializeBrowserVoice() {
   }
 }
 
-// Enhanced say function with VAPI
-function say(text) {
-  return new Promise((resolve) => {
-    if (!isVoiceEnabled) {
-      console.log("🔇 Voice disabled, skipping:", text);
-      resolve();
-      return;
+// In voice.js, update your say function to use Wall-E:
+async function say(text) {
+  if (!isVoiceEnabled) {
+    console.log("🔇 Voice disabled, skipping:", text);
+    return;
+  }
+  
+  console.log("🤖 Wall-E speaking:", text);
+  if (typeof addToSummary === 'function') {
+    addToSummary(`🤖 Wall-E: ${text}`);
+  }
+  if (typeof setAssistant === 'function') {
+    setAssistant(`Wall-E: ${text}`);
+  }
+  
+  // Try Wall-E voice first, fallback to browser TTS
+  if (typeof window.wallESpeak === 'function') {
+    try {
+      await window.wallESpeak(text);
+      console.log("✅ Wall-E TTS completed");
+    } catch (error) {
+      console.log("🔄 Wall-E failed, falling back to browser TTS:", error.message);
+      await fallbackToBrowserTTS(text);
     }
-    
-    console.log("🗣️ Speaking:", text);
-    if (typeof addToSummary === 'function') {
-      addToSummary(`🤖 ${text}`);
-    }
-    if (typeof setAssistant === 'function') {
-      setAssistant(text);
-    }
-    
-    ttsActive = true;
-    isSpeakingTTS = true;
-    blockUntil = Date.now() + (text.length * 60) + 1500;
-    
-    stopCurrentSpeech();
-    
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 0.9;
-    utterance.pitch = 1;
-    utterance.volume = 1;
-    
-    utterance.onend = () => {
-      ttsActive = false;
-      isSpeakingTTS = false;
-      console.log("✅ Speech completed");
-      resolve(); // ← Resolve when done
-    };
-    
-    utterance.onerror = (event) => {
-      ttsActive = false;
-      isSpeakingTTS = false;
-      console.log("❌ Speech error:", event.error);
-      resolve(); // ← Resolve on error too
-    };
-    
-    speechSynthesis.speak(utterance);
-  });
+  } else {
+    console.log("⚠️ Wall-E voice not available, using browser TTS");
+    await fallbackToBrowserTTS(text);
+  }
 }
 
 function sayAndResume(text) {
@@ -858,6 +842,37 @@ function sayAndResume(text) {
   };
   
   speechSynthesis.speak(utterance);
+}
+
+async function fallbackToBrowserTTS(text) {
+  return new Promise((resolve) => {
+    ttsActive = true;
+    isSpeakingTTS = true;
+    blockUntil = Date.now() + (text.length * 60) + 1500;
+    
+    speechSynthesis.cancel();
+    
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 0.9;
+    utterance.pitch = 1;
+    utterance.volume = 1;
+    
+    utterance.onend = () => {
+      ttsActive = false;
+      isSpeakingTTS = false;
+      console.log("✅ Browser TTS completed");
+      resolve();
+    };
+    
+    utterance.onerror = (event) => {
+      ttsActive = false;
+      isSpeakingTTS = false;
+      console.log("❌ Browser TTS error:", event.error);
+      resolve();
+    };
+    
+    speechSynthesis.speak(utterance);
+  });
 }
 
 // ✅ ADD DEBUG FUNCTION to check system state
