@@ -6,6 +6,7 @@
     <title>Freenove Rover Control Dashboard</title>
     <link rel="stylesheet" href="dashboard.css">
     <link rel="stylesheet" href="sentiment.css">
+    <link rel="stylesheet" href="genesys-styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -97,6 +98,10 @@
             </div>
             <div class="topbar-right">
                 <div class="topbar-actions">
+                    <button id="genesysBtn" class="btn btn-primary" style="margin-right: 10px;">
+                        <i class="fas fa-cloud"></i>
+                        Connect to Genesys Cloud
+                    </button>
                     <button class="btn btn-icon" title="Fullscreen">
                         <i class="fas fa-expand"></i>
                     </button>
@@ -526,11 +531,32 @@
                 }
             });
 
-            // Genesys authentication button
-            document.getElementById('genesys-auth-btn').addEventListener('click', () => {
-                if (window.sentimentAnalyzer) {
-                    window.sentimentAnalyzer.startAuth();
-                }
+            // Simple Genesys Cloud OAuth redirect
+            document.getElementById('genesysBtn').addEventListener('click', () => {
+                // Demo OAuth parameters
+                const params = new URLSearchParams({
+                    client_id: '376e2b50-76c3-45d8-804e-3815c8d1b2d9',
+                    response_type: 'code',
+                    redirect_uri: 'http://localhost:3001/auth/callback',
+                    scope: 'analytics conversations'
+                });
+
+                // Construct the login URL
+                const loginUrl = `https://login.cac1.pure.cloud/oauth/authorize?${params.toString()}`;
+
+                // Show connecting state
+                const btn = document.getElementById('genesysBtn');
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Connecting...';
+                btn.style.opacity = '0.7';
+                btn.disabled = true;
+
+                // Log the demo connection attempt
+                addLog('Redirecting to Genesys Cloud login (Demo Mode)...', 'info');
+
+                // Simple redirect to Genesys login
+                setTimeout(() => {
+                    window.location.href = loginUrl;
+                }, 1000); // Short delay to show loading state
             });
 
             // Set up sentiment analysis callbacks

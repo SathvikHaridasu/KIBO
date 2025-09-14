@@ -11,12 +11,12 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3000;  // Changed to match redirect URI
 
 // OAuth Configuration
 const CLIENT_ID = "376e2b50-76c3-45d8-804e-3815c8d1b2d9";
 const CLIENT_SECRET = "pYz2-gLgeIVjkPLrA_GgMB7y1LxF-SyOvRo77F9hgPw";
-const REDIRECT_URI = "http://localhost:3000/auth/callback";
+const REDIRECT_URI = "http://localhost:3001/auth/callback";
 
 // Function to exchange authorization code for tokens
 async function exchangeCodeForToken(code) {
