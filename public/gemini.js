@@ -8,7 +8,7 @@ window.GEMINI_CONFIG = {
 window.geminiAnalyzeUtterance = async function(utterance, conversationHistory = []){
   const url = `${GEMINI_CONFIG.endpointBase}/${encodeURIComponent(GEMINI_CONFIG.model)}:generateContent?key=${encodeURIComponent(GEMINI_CONFIG.apiKey)}`;
 
-  const systemInstruction = `You are Kibo, an intelligent navigation assistant. Parse user requests and respond with STRICT JSON only.
+  const systemInstruction = `You are Wall-E, an intelligent navigation assistant. Parse user requests and respond with STRICT JSON only.
 
 For complex requests like "set destination to nearest walmart", break them into actionable steps.
 

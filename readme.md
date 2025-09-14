@@ -1,6 +1,6 @@
-# Kibo — Voice Maps (Gemini)
+# Wall-E — Voice Maps (Gemini)
 
-Kibo is a voice-first, Gemini-powered mapping and robot control dashboard. It combines advanced voice interaction, real-time computer vision, and intuitive navigation for seamless human-robot collaboration.
+Wall-E is a voice-first, Gemini-powered mapping and robot control dashboard. It combines advanced voice interaction, real-time computer vision, and intuitive navigation for seamless human-robot collaboration.
 
 ---
 

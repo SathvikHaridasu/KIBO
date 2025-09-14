@@ -1,7 +1,7 @@
 {
   "name": "robo-dawg",
   "version": "1.0.0",
-  "description": "KIBO",
+  "description": "Wall-E",
   "main": "index.js",
   "type": "module",
   "scripts": {

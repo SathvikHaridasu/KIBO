@@ -30,6 +30,15 @@ const OBSTACLE_DETECTION = {
   CHECK_FREQUENCY: 1500            // Check obstacles every 1.5 seconds
 };
 
+// ===== ROVER SIMULATION CONFIGURATION =====
+const ROVER_SIMULATION = {
+  SCALE_FACTOR: 100,          // Default scale factor
+  MIN_SCALE: 50,              
+  MAX_SCALE: 500,             
+  SHOW_MOVEMENT_TRAIL: true,
+  AUTO_CENTER_MAP: false      // Set to false to prevent auto-centering
+};
+
 
 // ===== ENHANCED GPS-BASED NAVIGATION SYSTEM =====
 function startPositionTracking() {
@@ -247,9 +256,12 @@ async function checkObstaclesBeforeMovement(command, distanceInMeters) {
   return { proceed: true, reason: 'path_clear' };
 }
 
-// Enhanced robot movement with obstacle detection
+// Enhanced robot movement with obstacle detection and realistic turns
 async function executeRobotMovement(command, distanceInMeters) {
   console.log(`\n🎯 ENHANCED ROBOT STEP WITH OBSTACLE CHECK: ${command.toUpperCase()} ${distanceInMeters}m`);
+  
+  // Get current step data for turn calculations
+  const currentStep = navigationSteps[currentStepIndex] || null;
   
   // ✅ NEW: Check for obstacles before movement
   const obstacleCheck = await checkObstaclesBeforeMovement(command, distanceInMeters);
@@ -279,7 +291,6 @@ async function executeRobotMovement(command, distanceInMeters) {
     return false; // Movement cancelled
   }
   
-  // Continue with existing executeRobotMovement code below...
   console.log(`\n🎯 ENHANCED ROBOT STEP: ${command.toUpperCase()} ${distanceInMeters}m`);
   
   // ✅ Enable navigation mode - only STOP commands allowed
@@ -297,11 +308,32 @@ async function executeRobotMovement(command, distanceInMeters) {
   }
   
   try {
+    // ✅ ENHANCED DURATION CALCULATION
     let duration = 0.1;
+
     if (command === "forward" || command === "backward") {
-      const sqrtScale = Math.sqrt(distanceInMeters / 50);
-      duration = Math.max(0.03, Math.min(sqrtScale * 5.00, 2.0));
-      console.log(`📏 Duration formula: ${distanceInMeters}m → ${duration.toFixed(3)}s`);
+      // Much more conservative duration - slower movement
+      if (distanceInMeters <= 10) {
+        duration = 0.2;       // Very short distances: 0.2 seconds
+      } else if (distanceInMeters <= 50) {
+        duration = 0.4;       // Short distances: 0.4 seconds
+      } else if (distanceInMeters <= 100) {
+        duration = 0.6;       // Medium distances: 0.6 seconds
+      } else if (distanceInMeters <= 300) {
+        duration = 0.8;       // Long distances: 0.8 seconds
+      } else {
+        duration = 1.0;       // Very long: 1 second max
+      }
+      console.log(`📏 CONSERVATIVE Duration: ${distanceInMeters}m → ${duration.toFixed(3)}s`);
+    } else {
+      // Turn duration
+      if (currentStep) {
+        const turnData = calculateTurnAngle(currentStep, command);
+        duration = Math.max(0.2, Math.min((turnData.degrees / 90) * 0.3, 0.5)); // Max 0.5s turns
+        console.log(`🔄 Turn duration: ${turnData.degrees}° → ${duration.toFixed(3)}s`);
+      } else {
+        duration = 0.3; // Default turn time
+      }
     }
     
     // ✅ ENHANCED ANNOUNCEMENTS WITH STREET NAMES
@@ -314,31 +346,37 @@ async function executeRobotMovement(command, distanceInMeters) {
       const streetName = streetMatch ? streetMatch[1] : "";
       
       if (streetName) {
-        announcement = `Kibo will now continue forward on ${streetName} for ${distanceInMeters} meters, monitoring for obstacles`;
+        announcement = `Wall-E will now continue forward on ${streetName} for ${distanceInMeters} meters, monitoring for obstacles`;
       } else {
-        announcement = `Kibo will now move forward ${distanceInMeters} meters with obstacle detection active`;
+        announcement = `Wall-E will now move forward ${distanceInMeters} meters with obstacle detection active`;
       }
     } else if (command === "left") {
       const streetMatch = instruction.match(/turn left (?:onto|into|on)\s+([^,\s]+(?:\s+[^,\s]+)*)/i);
       const streetName = streetMatch ? streetMatch[1] : "";
       
+      // Get turn angle info
+      const turnData = currentStep ? calculateTurnAngle(currentStep, "left") : { degrees: 90, type: "normal" };
+      
       if (streetName && distanceInMeters > 0) {
-        announcement = `Kibo will now turn left onto ${streetName} and continue for ${distanceInMeters} meters`;
+        announcement = `Wall-E will now turn left ${turnData.degrees} degrees onto ${streetName} and continue for ${distanceInMeters} meters`;
       } else if (streetName) {
-        announcement = `Kibo will now turn left onto ${streetName}`;
+        announcement = `Wall-E will now turn left ${turnData.degrees} degrees onto ${streetName}`;
       } else {
-        announcement = `Kibo will now turn left and continue ${distanceInMeters} meters`;
+        announcement = `Wall-E will now turn left ${turnData.degrees} degrees and continue ${distanceInMeters} meters`;
       }
     } else if (command === "right") {
       const streetMatch = instruction.match(/turn right (?:onto|into|on)\s+([^,\s]+(?:\s+[^,\s]+)*)/i);
       const streetName = streetMatch ? streetMatch[1] : "";
       
+      // Get turn angle info
+      const turnData = currentStep ? calculateTurnAngle(currentStep, "right") : { degrees: 90, type: "normal" };
+      
       if (streetName && distanceInMeters > 0) {
-        announcement = `Kibo will now turn right onto ${streetName} and continue for ${distanceInMeters} meters`;
+        announcement = `Wall-E will now turn right ${turnData.degrees} degrees onto ${streetName} and continue for ${distanceInMeters} meters`;
       } else if (streetName) {
-        announcement = `Kibo will now turn right onto ${streetName}`;
+        announcement = `Wall-E will now turn right ${turnData.degrees} degrees onto ${streetName}`;
       } else {
-        announcement = `Kibo will now turn right and continue ${distanceInMeters} meters`;
+        announcement = `Wall-E will now turn right ${turnData.degrees} degrees and continue ${distanceInMeters} meters`;
       }
     }
 
@@ -350,9 +388,9 @@ async function executeRobotMovement(command, distanceInMeters) {
       const streetName = streetMatch ? streetMatch[1] : "";
       
       if (streetName) {
-        announcement = `Kibo will navigate the roundabout, taking the ${exitNum} exit onto ${streetName}, continuing for ${distanceInMeters} meters`;
+        announcement = `Wall-E will navigate the roundabout, taking the ${exitNum} exit onto ${streetName}, continuing for ${distanceInMeters} meters`;
       } else {
-        announcement = `Kibo will navigate the roundabout, taking the ${exitNum} exit, continuing for ${distanceInMeters} meters`;
+        announcement = `Wall-E will navigate the roundabout, taking the ${exitNum} exit, continuing for ${distanceInMeters} meters`;
       }
     }
     
@@ -394,11 +432,11 @@ async function executeRobotMovement(command, distanceInMeters) {
     
     // ✅ NOW EXECUTE MOVEMENT WITH OBSTACLE DETECTION
     let result = false;
-    console.log(`🤖 Starting Kibo movement with obstacle monitoring...`);
+    console.log(`🤖 Starting Wall-E movement with obstacle monitoring...`);
     
     switch(command) {
       case "forward":
-        console.log(`🤖 Kibo moving forward ${duration.toFixed(2)}s with obstacle detection`);
+        console.log(`🤖 Wall-E moving forward ${duration.toFixed(2)}s with obstacle detection`);
         if (typeof moveForwardWithObstacleDetection === 'function') {
           result = await moveForwardWithObstacleDetection(duration, distanceInMeters);
         } else if (typeof moveForward === 'function') {
@@ -408,7 +446,7 @@ async function executeRobotMovement(command, distanceInMeters) {
         
       case "left":
       case "right":
-        console.log(`🤖 Kibo turning ${command} 0.3s`);
+        console.log(`🤖 Wall-E turning ${command} ${duration.toFixed(2)}s`);
         
         // Check for obstacles before turning
         const obstaclesBeforeTurn = await checkForObstacles();
@@ -418,44 +456,89 @@ async function executeRobotMovement(command, distanceInMeters) {
         }
         
         if (command === "left" && typeof turnLeft === 'function') {
-          result = await turnLeft(0.3);
+          result = await turnLeft(duration);
         } else if (command === "right" && typeof turnRight === 'function') {
-          result = await turnRight(0.3);
+          result = await turnRight(duration);
         }
         
+        // Continue forward after turn if needed
         if (result && distanceInMeters > 0) {
-          console.log(`🤖 After turn: Kibo moving forward ${duration.toFixed(2)}s with obstacle detection`);
+          const forwardDuration = Math.max(0.05, Math.min(Math.sqrt(distanceInMeters / 50) * 3.0, 2.5));
+          console.log(`🤖 After turn: Wall-E moving forward ${forwardDuration.toFixed(2)}s with obstacle detection`);
           await new Promise(resolve => setTimeout(resolve, 500));
           if (typeof moveForwardWithObstacleDetection === 'function') {
-            await moveForwardWithObstacleDetection(duration, distanceInMeters);
+            await moveForwardWithObstacleDetection(forwardDuration, distanceInMeters);
           } else if (typeof moveForward === 'function') {
-            await moveForward(duration);
+            await moveForward(forwardDuration);
           }
+        }
+        break;
+        
+      case "backward":
+        console.log(`🤖 Wall-E moving backward ${duration.toFixed(2)}s`);
+        if (typeof moveBackward === 'function') {
+          result = await moveBackward(duration);
         }
         break;
     }
     
-    // ✅ Update simulated rover position
-    simulateRoverMovement(command, distanceInMeters);
+    // ✅ Update simulated rover position WITH step data
+    simulateRoverMovement(command, distanceInMeters, currentStep);
     
     if (result) {
-      console.log(`✅ Kibo movement complete`);
+      console.log(`✅ Wall-E movement complete`);
       if (typeof addToSummary === 'function') {
         addToSummary(`🤖 ${command} ${distanceInMeters}m completed safely`);
       }
 
+      // ✅ Live map animation if available
       if (routeCoordinates.length > 0) {
-        animateKiboMovement(command, distanceInMeters);
+        animateWallEMovement(command, distanceInMeters);
       }
       
       // ✅ Brief pause before next step
       setTimeout(() => {
         advanceToNextStep();
       }, 1000);
+    } else {
+      console.log(`❌ Wall-E movement failed or was interrupted`);
+      if (typeof addToSummary === 'function') {
+        addToSummary(`❌ ${command} movement failed - navigation paused`);
+      }
+      
+      // Reset navigation flags on failure
+      navigationInProgress = false;
+      stopOnlyMode = false;
+      
+      if (typeof window !== 'undefined') {
+        window.navigationInProgress = false;
+        window.stopOnlyMode = false;
+      }
+      
+      if (typeof setVoiceStatus === 'function') {
+        setVoiceStatus("⚠️ Navigation paused - manual assistance may be needed");
+      }
     }
     
   } catch (error) {
     console.error(`❌ Robot movement error:`, error);
+    
+    // Reset navigation flags on error
+    navigationInProgress = false;
+    stopOnlyMode = false;
+    
+    if (typeof window !== 'undefined') {
+      window.navigationInProgress = false;
+      window.stopOnlyMode = false;
+    }
+    
+    if (typeof addToSummary === 'function') {
+      addToSummary(`❌ Movement error: ${error.message}`);
+    }
+    
+    if (typeof setVoiceStatus === 'function') {
+      setVoiceStatus("❌ Navigation error - ready for new commands");
+    }
   }
 }
 
@@ -480,9 +563,9 @@ function initializeSimulatedRover() {
   roverStartPosition = { ...simulatedRoverPosition };
   roverBearing = 0; // Start facing north
   
-  console.log("🤖 Kibo initialized at:", simulatedRoverPosition);
+  console.log("🤖 Wall-E initialized at:", simulatedRoverPosition);
   if (typeof addToSummary === 'function') {
-    addToSummary(`🤖 Kibo position initialized: ${simulatedRoverPosition.lat.toFixed(6)}, ${simulatedRoverPosition.lng.toFixed(6)}`);
+    addToSummary(`🤖 Wall-E position initialized: ${simulatedRoverPosition.lat.toFixed(6)}, ${simulatedRoverPosition.lng.toFixed(6)}`);
   }
   
   // Create rover marker on map
@@ -879,7 +962,7 @@ function createRoverMarker() {
     window.roverMarker = new google.maps.Marker({
       position: simulatedRoverPosition,
       map: map,
-      title: "Kibo Robot",
+      title: "Wall-E Robot",
       icon: {
         path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
         scale: 6,
@@ -893,13 +976,13 @@ function createRoverMarker() {
   }
 }
 
-// ✅ Simulate rover movement based on real distances
-function simulateRoverMovement(command, realDistanceMeters) {
+// ✅ Enhanced movement with realistic turns and distance-based animation
+function simulateRoverMovement(command, realDistanceMeters, stepData = null) {
   if (!simulatedRoverPosition) {
     initializeSimulatedRover();
   }
   
-  console.log(`\n📍 === POSITION UPDATE ===`);
+  console.log(`\n📍 === ENHANCED POSITION UPDATE ===`);
   console.log(`Command: ${command}, Distance: ${realDistanceMeters}m`);
   console.log(`Before - Lat: ${simulatedRoverPosition.lat.toFixed(8)}, Lng: ${simulatedRoverPosition.lng.toFixed(8)}, Bearing: ${roverBearing}°`);
   
@@ -908,28 +991,29 @@ function simulateRoverMovement(command, realDistanceMeters) {
   switch(command) {
     case "forward":
       if (realDistanceMeters > 0) {
-        // Convert to actual GPS distance (scaled)
-        const simulatedDistanceMeters = realDistanceMeters / 1000; // Scale down for testing
-        newPosition = moveInDirection(simulatedRoverPosition, roverBearing, simulatedDistanceMeters);
-        console.log(`✅ Moved forward ${realDistanceMeters}m (${simulatedDistanceMeters*1000}m GPS scale)`);
+        const result = simulateForwardMovement(realDistanceMeters);
+        newPosition = result.newPosition;
+        
+        // ✅ ANIMATE BASED ON ACTUAL DISTANCE
+        animateRoverMovement(result.simulatedDistanceMeters, realDistanceMeters);
       }
       break;
       
     case "left":
-      roverBearing = (roverBearing - 90 + 360) % 360;
-      console.log(`✅ Turned left - now facing ${roverBearing}°`);
+      const leftTurnData = calculateTurnAngle(stepData, "left");
+      simulateTurnMovement("left", leftTurnData.degrees, stepData);
       break;
       
-    case "right": 
-      roverBearing = (roverBearing + 90) % 360;
-      console.log(`✅ Turned right - now facing ${roverBearing}°`);
+    case "right":
+      const rightTurnData = calculateTurnAngle(stepData, "right");
+      simulateTurnMovement("right", rightTurnData.degrees, stepData);
       break;
       
     case "backward":
       if (realDistanceMeters > 0) {
-        const simulatedDistanceMeters = realDistanceMeters / 1000;
-        newPosition = moveInDirection(simulatedRoverPosition, (roverBearing + 180) % 360, simulatedDistanceMeters);
-        console.log(`✅ Moved backward ${realDistanceMeters}m`);
+        const result = simulateBackwardMovement(realDistanceMeters);
+        newPosition = result.newPosition;
+        animateRoverMovement(result.simulatedDistanceMeters, realDistanceMeters);
       }
       break;
   }
@@ -938,22 +1022,205 @@ function simulateRoverMovement(command, realDistanceMeters) {
   simulatedRoverPosition = newPosition;
   
   console.log(`After  - Lat: ${simulatedRoverPosition.lat.toFixed(8)}, Lng: ${simulatedRoverPosition.lng.toFixed(8)}, Bearing: ${roverBearing}°`);
+  console.log(`===========================\n`);
+}
+
+// ✅ Calculate realistic turn angles from Google Maps data
+function calculateTurnAngle(stepData, direction) {
+  if (!stepData) {
+    // Default angles if no step data
+    return { degrees: 90, type: "default" };
+  }
   
-  // Update rover marker on map
-  if (typeof window !== 'undefined' && window.roverMarker) {
+  let turnDegrees = 90; // Default
+  let turnType = "normal";
+  
+  // ✅ Extract turn info from maneuver
+  if (stepData.maneuver) {
+    const maneuver = stepData.maneuver.toLowerCase();
+    
+    switch(maneuver) {
+      case 'turn-slight-left':
+      case 'turn-slight-right':
+        turnDegrees = 30;
+        turnType = "slight";
+        break;
+      case 'turn-left':
+      case 'turn-right':
+        turnDegrees = 90;
+        turnType = "normal";
+        break;
+      case 'turn-sharp-left':
+      case 'turn-sharp-right':
+        turnDegrees = 120;
+        turnType = "sharp";
+        break;
+      case 'ramp-left':
+      case 'ramp-right':
+        turnDegrees = 45;
+        turnType = "ramp";
+        break;
+      case 'roundabout-left':
+      case 'roundabout-right':
+        turnDegrees = 270; // 3/4 circle for roundabouts
+        turnType = "roundabout";
+        break;
+      default:
+        turnDegrees = 90;
+        turnType = "normal";
+    }
+  }
+  
+  // ✅ Calculate actual bearing change from step geometry
+  if (stepData.startLocation && stepData.endLocation) {
+    const startLat = stepData.startLocation.lat();
+    const startLng = stepData.startLocation.lng();
+    const endLat = stepData.endLocation.lat();
+    const endLng = stepData.endLocation.lng();
+    
+    // Calculate the actual bearing change needed
+    const targetBearing = calculateBearing(
+      { lat: startLat, lng: startLng },
+      { lat: endLat, lng: endLng }
+    );
+    
+    let bearingChange = targetBearing - roverBearing;
+    if (bearingChange > 180) bearingChange -= 360;
+    if (bearingChange < -180) bearingChange += 360;
+    
+    // Use the calculated bearing change if it's significant
+    if (Math.abs(bearingChange) > 10) {
+      turnDegrees = Math.abs(bearingChange);
+      turnType = "calculated";
+      
+      console.log(`🧭 Calculated bearing change: ${bearingChange.toFixed(1)}° (from ${roverBearing}° to ${targetBearing.toFixed(1)}°)`);
+    }
+  }
+  
+  console.log(`🔄 Turn analysis: ${direction} ${turnDegrees}° (${turnType})`);
+  return { degrees: turnDegrees, type: turnType, maneuver: stepData?.maneuver };
+}
+
+// ✅ Simulate realistic turning with proper angles
+function simulateTurnMovement(direction, degrees, stepData) {
+  const turnDirection = direction === "left" ? -1 : 1;
+  const oldBearing = roverBearing;
+  
+  // Apply the turn
+  roverBearing = (roverBearing + (degrees * turnDirection) + 360) % 360;
+  
+  console.log(`✅ Turned ${direction} ${degrees}° - from ${oldBearing}° to ${roverBearing}°`);
+  
+  if (typeof addToSummary === 'function') {
+    const maneuverText = stepData?.maneuver || `${direction} turn`;
+    addToSummary(`🔄 ${maneuverText}: ${degrees}° ${direction} (${oldBearing}° → ${roverBearing}°)`);
+  }
+  
+  // ✅ Animate the turn based on degrees
+  animateTurnMovement(direction, degrees);
+}
+
+// ✅ Fixed GPS movement: ALL distances map to 15-30cm range
+function simulateForwardMovement(realDistanceMeters) {
+  // ✅ FORMULA: Map any distance to 15-30cm GPS movement
+  const minGPS = 0.15;  // 15cm minimum
+  const maxGPS = 0.30;  // 30cm maximum
+  const range = maxGPS - minGPS;  // 15cm range
+  
+  // Use logarithmic scaling to compress distances nicely
+  const logDistance = Math.log(realDistanceMeters + 1);
+  const maxLogDistance = Math.log(2000 + 1); // Max expected distance ~2km
+  const scaledRatio = Math.min(logDistance / maxLogDistance, 1.0);
+  
+  const simulatedDistanceMeters = minGPS + (range * scaledRatio);
+  const newPosition = moveInDirection(simulatedRoverPosition, roverBearing, simulatedDistanceMeters);
+  
+  // Calculate what scale factor this represents
+  const effectiveScale = realDistanceMeters / simulatedDistanceMeters;
+  
+  console.log(`✅ CONSTRAINED Forward ${realDistanceMeters}m real → ${(simulatedDistanceMeters * 100).toFixed(1)}cm GPS (effective 1:${effectiveScale.toFixed(0)} scale)`);
+  
+  if (typeof addToSummary === 'function') {
+    addToSummary(`🤖 Forward ${realDistanceMeters}m → ${(simulatedDistanceMeters * 100).toFixed(1)}cm GPS`);
+  }
+  
+  return { newPosition, simulatedDistanceMeters, scaleFactor: effectiveScale };
+}
+
+// ✅ Backward movement
+function simulateBackwardMovement(realDistanceMeters) {
+  const scaleFactor = realDistanceMeters <= 10 ? 10 : 
+                     realDistanceMeters <= 50 ? 25 : 50;
+  const simulatedDistanceMeters = realDistanceMeters / scaleFactor;
+  const newPosition = moveInDirection(simulatedRoverPosition, (roverBearing + 180) % 360, simulatedDistanceMeters);
+  
+  console.log(`✅ Backward ${realDistanceMeters}m real → ${simulatedDistanceMeters.toFixed(3)}m GPS (1:${scaleFactor} scale)`);
+  
+  return { newPosition, simulatedDistanceMeters, scaleFactor };
+}
+
+// ✅ SIMPLIFIED ANIMATION - no complex timing
+function animateRoverMovement(simulatedDistance, realDistance) {
+  console.log(`🎬 Simple animation: ${realDistance}m real, ${simulatedDistance.toFixed(4)}m GPS`);
+  
+  // Just update the marker immediately - no complex animations
+  updateRoverMarkerPosition();
+  
+  // Simple feedback
+  if (typeof addToSummary === 'function') {
+    addToSummary(`📏 Moved ${realDistance}m (${simulatedDistance.toFixed(3)}m GPS scale)`);
+  }
+}
+
+// ✅ Animated turning - makes turn degrees feel different  
+function animateTurnMovement(direction, degrees) {
+  // ✅ Turn animation duration based on degrees
+  let turnDuration;
+  if (degrees <= 30) {
+    turnDuration = 300;   // 0.3 seconds for slight turns
+  } else if (degrees <= 90) {
+    turnDuration = 600;   // 0.6 seconds for normal turns
+  } else if (degrees <= 120) {
+    turnDuration = 900;   // 0.9 seconds for sharp turns
+  } else {
+    turnDuration = 1200;  // 1.2 seconds for roundabouts
+  }
+  
+  console.log(`🔄 Animating turn: ${degrees}° over ${turnDuration}ms`);
+  
+  // Update marker immediately
+  updateRoverMarkerPosition();
+  
+  // Add turn feedback
+  if (typeof addToSummary === 'function') {
+    const turnType = degrees <= 30 ? "slight" :
+                    degrees <= 90 ? "normal" :
+                    degrees <= 120 ? "sharp" : "roundabout";
+    addToSummary(`🔄 ${turnType} ${direction} turn: ${degrees}° (${turnDuration/1000}s)`);
+  }
+}
+
+// ✅ SIMPLIFIED rover marker updates
+function updateRoverMarkerPosition() {
+  if (typeof window !== 'undefined' && window.roverMarker && simulatedRoverPosition) {
     window.roverMarker.setPosition(simulatedRoverPosition);
     window.roverMarker.setIcon({
       path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-      scale: 8,
+      scale: 10,              
       fillColor: "#FF0000", 
       fillOpacity: 1,
-      strokeWeight: 2,
+      strokeWeight: 3,        
       strokeColor: "#FFFFFF",
       rotation: roverBearing
     });
+    
+    // Only center if explicitly enabled
+    if (ROVER_SIMULATION.AUTO_CENTER_MAP && typeof map !== 'undefined') {
+      map.panTo(simulatedRoverPosition);
+    }
+    
+    console.log(`📍 Rover marker updated at: ${simulatedRoverPosition.lat.toFixed(6)}, ${simulatedRoverPosition.lng.toFixed(6)}`);
   }
-  
-  console.log(`========================\n`);
 }
 
 // ✅ Helper function to move in a specific direction
@@ -1191,14 +1458,14 @@ function startLiveMapAnimation(directionsResult) {
     return;
   }
   
-  // Start Kibo at the beginning of the route
+  // Start Wall-E at the beginning of the route
   currentRouteIndex = 0;
   routeProgress = 0;
   
   const startPosition = routeCoordinates[0];
   simulatedRoverPosition = { ...startPosition };
   
-  // Create/update Kibo's marker
+  // Create/update Wall-E's marker
   createAnimatedRoverMarker();
   
   // Center map on starting position
@@ -1221,7 +1488,7 @@ function createAnimatedRoverMarker() {
     window.roverMarker = new google.maps.Marker({
       position: simulatedRoverPosition,
       map: map,
-      title: "Kibo Robot - Live Navigation",
+      title: "Wall-E Robot - Live Navigation",
       icon: {
         path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
         scale: 8,
@@ -1237,7 +1504,7 @@ function createAnimatedRoverMarker() {
     // Add info window with progress
     const infoWindow = new google.maps.InfoWindow({
       content: `<div style="text-align:center">
-        <strong>🤖 Kibo Robot</strong><br>
+        <strong>🤖 Wall-E Robot</strong><br>
         <span style="color:#666">Navigation Progress: ${Math.round(routeProgress * 100)}%</span>
       </div>`
     });
@@ -1248,14 +1515,14 @@ function createAnimatedRoverMarker() {
   }
 }
 
-// Animate Kibo along the route (call this during movement)
-function animateKiboMovement(command, distanceInMeters) {
+// Animate Wall-E along the route (call this during movement)
+function animateWallEMovement(command, distanceInMeters) {
   if (routeCoordinates.length === 0) {
     console.log("⚠️ No route coordinates for animation");
     return;
   }
   
-  console.log(`🎬 Animating Kibo ${command} movement: ${distanceInMeters}m`);
+  console.log(`🎬 Animating Wall-E ${command} movement: ${distanceInMeters}m`);
   
   // Calculate how many route points to advance based on distance
   const totalRouteDistance = calculateTotalRouteDistance();
@@ -1295,7 +1562,7 @@ function animateBetweenPoints(startIndex, endIndex, durationMs) {
       lng: startPos.lng + (endPos.lng - startPos.lng) * progress
     };
     
-    // Update Kibo's position
+    // Update Wall-E's position
     simulatedRoverPosition = currentPos;
     
     if (window.roverMarker) {
@@ -1311,7 +1578,7 @@ function animateBetweenPoints(startIndex, endIndex, durationMs) {
       });
     }
     
-    // Keep map centered on Kibo
+    // Keep map centered on Wall-E
     if (typeof map !== 'undefined') {
       map.panTo(currentPos);
     }

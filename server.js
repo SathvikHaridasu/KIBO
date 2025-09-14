@@ -228,7 +228,7 @@ app.get("/api/health", (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 Kibo backend running on http://localhost:${PORT}`);
+  console.log(`🚀 Wall-E backend running on http://localhost:${PORT}`);
   console.log(`📍 STT endpoint: http://localhost:${PORT}/api/stt`);
   console.log(`🧠 NLP endpoint: http://localhost:${PORT}/api/nlp`);
   console.log(`⚙️  Config endpoint: http://localhost:${PORT}/api/config`);

@@ -87,7 +87,7 @@ function tryLocateUser(){
       userMarker = new google.maps.Marker({ 
         position: coords, 
         map, 
-        title: "Kibo's Location",
+        title: "Wall-E's Location",
         icon: {
           path: google.maps.SymbolPath.CIRCLE,
           scale: 8,
@@ -98,9 +98,9 @@ function tryLocateUser(){
         }
       });
       
-      console.log("📍 Kibo location set:", coords);
+      console.log("📍 Wall-E location set:", coords);
       if (typeof addToSummary === 'function') {
-        addToSummary("🤖 Kibo's location updated");
+        addToSummary("🤖 Wall-E's location updated");
       }
       
       if (typeof navigationActive !== 'undefined' && navigationActive) {
@@ -112,7 +112,7 @@ function tryLocateUser(){
     (err)=> { 
       console.warn("Geolocation error:", err); 
       if (typeof toast === 'function') {
-        toast("Could not get Kibo's location.");
+        toast("Could not get Wall-E's location.");
       }
     },
     { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
